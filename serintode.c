@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <math.h>
 #include "gmp.h"
 #include "iml.h"
 
@@ -12,11 +13,12 @@
 int main()
 {
     long const MAX_DIGITS=1000L; /*This needs to be input*/
-    long const NUM_COEFFS=100L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
-    long const MAX_ODE_ORDER=8L; /*This needs to be input or automated*/
-    long const MAX_POLY_ORDER=8L; /*This needs to be input or automated*/
+    long const NUM_COEFFS=316L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
+    long const MAX_ODE_ORDER=10L; /*This needs to be input or automated*/
+    long const NUM_CHECKS=5L; /*Should be greater than 0*/
+    long const MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
     long const COLUMNS=(MAX_ODE_ORDER+1)*(MAX_POLY_ORDER+1);
-    long const ROWS=COLUMNS+5; //5 checks
+    long const ROWS=COLUMNS+NUM_CHECKS; 
     long i,j,k;
     long nulldim;
     char input_string[MAX_DIGITS+1L];
@@ -24,11 +26,13 @@ int main()
     FILE* fid=NULL;
     char *fgcheck;
     
+    printf("Checking for ODE order %ld with polynomial coefficients of order %ld and %ld checks\n",MAX_ODE_ORDER,MAX_POLY_ORDER,NUM_CHECKS);
+    
     mpz_inits(temp,temp2,coeff,NULL);
 
     S = (mpz_t*) malloc(NUM_COEFFS*sizeof(mpz_t));
     
-    fid = fopen("tests/kolakoski.txt","r");
+    fid = fopen("tests/three_choice.perim.ser","r");
     if (fid==NULL)
     {
         printf("\nERROR: Could not open input file. %s\n",strerror(errno));
