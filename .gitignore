@@ -53,3 +53,4 @@ dkms.conf
 
 # Test data
 tests/
+.directory
