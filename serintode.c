@@ -27,7 +27,7 @@ int main()
 
     M = (mpz_t*) malloc(NUM_INPUT*sizeof(mpz_t));
     
-    fid = fopen("kolakoski.txt","r");
+    fid = fopen("tests/kolakoski.txt","r");
     if (fid==NULL)
     {
         printf("\nERROR: Could not open input file. %s\n",strerror(errno));
