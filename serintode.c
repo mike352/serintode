@@ -12,11 +12,11 @@
 int main()
 {
     long const MAX_DIGITS=1000L; /*This needs to be input*/
-    long const NUM_COEFFS=31L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
-    long const MAX_ODE_ORDER=2L; /*This needs to be input or automated*/
-    long const MAX_POLY_ORDER=3L; /*This needs to be input or automated*/
+    long const NUM_COEFFS=100L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
+    long const MAX_ODE_ORDER=8L; /*This needs to be input or automated*/
+    long const MAX_POLY_ORDER=8L; /*This needs to be input or automated*/
     long const COLUMNS=(MAX_ODE_ORDER+1)*(MAX_POLY_ORDER+1);
-    long const ROWS=COLUMNS+5L; //5 checks
+    long const ROWS=COLUMNS+5; //5 checks
     long i,j,k;
     long nulldim;
     char input_string[MAX_DIGITS+1L];
@@ -28,7 +28,7 @@ int main()
 
     S = (mpz_t*) malloc(NUM_COEFFS*sizeof(mpz_t));
     
-    fid = fopen("tests/catalan.txt","r");
+    fid = fopen("tests/kolakoski.txt","r");
     if (fid==NULL)
     {
         printf("\nERROR: Could not open input file. %s\n",strerror(errno));
@@ -72,8 +72,9 @@ int main()
                 mpz_fac_ui(temp,j+k-i);
                 mpz_fac_ui(temp2,k-i);
                 mpz_divexact(coeff,temp,temp2); //coeff = (j+k-i)!/(k-i)!
-                mpz_mul(temp,coeff,S[j+k-i]);
-                mpz_init_set(M[k*COLUMNS+i*MAX_POLY_ORDER+j],temp);
+                mpz_mul(temp,coeff,S[j+k-i]); //printf("Check i=%ld, j=%ld, k=%ld, index=%ld, index=%ld, max=%ld  ",i,j,k,j+k-i,k*COLUMNS+i*MAX_ODE_ORDER+j,ROWS*COLUMNS);
+                //mpz_out_str(NULL,10,coeff); printf("\n");
+                mpz_init_set(M[k*COLUMNS+i*MAX_ODE_ORDER+j],temp);
             }
         }
     }
@@ -91,16 +92,37 @@ int main()
     
     
     nulldim = nullspaceMP (ROWS, COLUMNS, M, &N);
-    fprintf (stdout, "Dimension of nullspace: ");
-    fprintf (stdout, " %ld\n", nulldim);
-    for (i = 0L; i < COLUMNS; i++)
+    if (nulldim>0L)
     {
-        for (j = 0L; j < nulldim; j++)
+        mpz_set_ui(temp,0L);
+        for (i = 0L; i < COLUMNS; i++)
         {
-            gmp_fprintf (stdout, "  %Zd", N[i * nulldim + j]);
+            for (j = 0L; j < nulldim; j++)
+            {
+                mpz_abs(temp2,N[i * nulldim + j]);
+                mpz_add(temp,temp,temp2);
+            }
         }
-        fprintf (stdout, "\n"); 
     }
+    
+    if (mpz_get_ui(temp)!=nulldim)
+    {
+        fprintf (stdout, "Dimension of nullspace: ");
+        fprintf (stdout, " %ld\n", nulldim);
+        for (i = 0L; i < COLUMNS; i++)
+        {
+            for (j = 0L; j < nulldim; j++)
+            {
+                gmp_fprintf (stdout, "  %Zd", N[i * nulldim + j]);
+            }
+            fprintf (stdout, "\n"); 
+        }
+    }
+    else
+    {
+        printf("Couldn't find a solution.\n");
+    }
+    //gmp_fprintf (stdout, "  %Zd", temp);
     
     
     /*Clearing mpz variables and closing file*/
