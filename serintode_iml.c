@@ -16,7 +16,7 @@ int main()
     long const MAX_DIGITS=1000L; /*This needs to be input*/
     long const NUM_COEFFS=31L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
     long const MAX_ODE_ORDER=2L; /*This needs to be input or automated*/
-    long const NUM_CHECKS=1L; /*Should be greater than 0*/
+    long const NUM_CHECKS=12L; /*Should be greater than 0*/
     long const MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
     long const COLUMNS=(MAX_ODE_ORDER+1)*(MAX_POLY_ORDER+1);
     long const ROWS=COLUMNS+NUM_CHECKS; 

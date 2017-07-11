@@ -29,3 +29,10 @@ where n is the number of rows. This seems to all stem from the fact that it redu
 So as long as none of series coefficients have multiple factors of the random prime chosen, the results can be trusted. Otherwise, not. If the coefficients are large enough, the serintode_iml function should be run multiple times and any result should be checked explicitly using the original series to check for annihilation. This could be implemented at a later time.
 
 Therefore, I'm switching over to another fully arbitrary precision integer matrix library.
+
+If using it, open up serintode_iml.c and modify the filename, number of coefficients to read, maximum ODE order, and number of checks. Then compile as follows:
+gcc -Wall serintode_iml.c -o serintode_iml.o -liml -lcblas -lgmp -lm
+If it finds a solution, it will output it as column vectors spanning the kernel of the input matrix. Each column vector has rows as follows:
+P_{0,0}, P_{1,0}, ..., P_{o,0}, P_{0,1}, P_{1,1}, ..., P_{o,1}, ...  P_{0,n}, P_{1,n}, ..., P_{o,n}
+where the order of the ODE is o and the order of the polynomial coefficients is n. The P_{i,j} are the j polynomial coefficients of the operator d^i/dx^i
+
