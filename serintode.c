@@ -7,16 +7,17 @@
 #include "gmp.h"
 #include "iml.h"
 
-//Check things with Valgrind
+
 //Compile: gcc -Wall serintode.c -o serintode -liml -lcblas -lgmp -lm
 
 int main()
 {
+    char *fname = "tests/catalan.txt"; /*File name of data*/
     long const MAX_DIGITS=1000L; /*This needs to be input*/
-    long const NUM_COEFFS=316L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
-    long const MAX_ODE_ORDER=10L; /*This needs to be input or automated*/
-    long const NUM_CHECKS=5L; /*Should be greater than 0*/
-    long const MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
+    long const NUM_COEFFS=31L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
+    long const MAX_ODE_ORDER=2L; /*This needs to be input or automated*/
+    long const NUM_CHECKS=0L; /*Should be greater than 0*/
+    long const MAX_POLY_ORDER=2;//floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
     long const COLUMNS=(MAX_ODE_ORDER+1)*(MAX_POLY_ORDER+1);
     long const ROWS=COLUMNS+NUM_CHECKS; 
     long i,j,k;
@@ -32,7 +33,7 @@ int main()
 
     S = (mpz_t*) malloc(NUM_COEFFS*sizeof(mpz_t));
     
-    fid = fopen("tests/three_choice.perim.ser","r");
+    fid = fopen(fname,"r");
     if (fid==NULL)
     {
         printf("\nERROR: Could not open input file. %s\n",strerror(errno));
@@ -67,23 +68,23 @@ int main()
     
     M = (mpz_t*) malloc(ROWS*COLUMNS*sizeof(mpz_t));
     
-    for (i=0L;i<MAX_POLY_ORDER+1;i++)
+    for (i=0L;i<MAX_POLY_ORDER+1L;i++)
     {
-        for (j=0;j<MAX_ODE_ORDER+1;j++)
+        for (j=0;j<MAX_ODE_ORDER+1L;j++)
         {
             for (k=i;k<ROWS;k++)
             {
                 mpz_fac_ui(temp,j+k-i);
                 mpz_fac_ui(temp2,k-i);
                 mpz_divexact(coeff,temp,temp2); //coeff = (j+k-i)!/(k-i)!
-                mpz_mul(temp,coeff,S[j+k-i]); //printf("Check i=%ld, j=%ld, k=%ld, index=%ld, index=%ld, max=%ld  ",i,j,k,j+k-i,k*COLUMNS+i*MAX_ODE_ORDER+j,ROWS*COLUMNS);
+                mpz_mul(temp,coeff,S[j+k-i]); //printf("Check i=%ld, j=%ld, k=%ld, index=%ld, index=%ld, max=%ld  ",i,j,k,j+k-i,k*COLUMNS+i*(MAX_ODE_ORDER+1)+j,ROWS*COLUMNS);
                 //mpz_out_str(NULL,10,coeff); printf("\n");
-                mpz_init_set(M[k*COLUMNS+i*MAX_ODE_ORDER+j],temp);
+                mpz_init_set(M[k*COLUMNS+i*(MAX_ODE_ORDER+1)+j],temp);
             }
         }
     }
     
-    /*
+    
     printf("Input Matrix M:\n");
     for (i = 0; i < ROWS; i++)
     {
@@ -92,12 +93,14 @@ int main()
             gmp_fprintf (stdout, "  %Zd", M[i * COLUMNS + j]);
         }
         fprintf (stdout, "\n");
-    }*/
+    }
     
     
-    nulldim = nullspaceMP (ROWS, COLUMNS, M, &N);
+    //nulldim = nullspaceMP (ROWS, COLUMNS, M, &N);
+    nulldim = kernelMP(ROWS,COLUMNS,M,&N,1L);
     if (nulldim>0L)
     {
+        //printf("Checking whether solution is spurious.\n");
         mpz_set_ui(temp,0L);
         for (i = 0L; i < COLUMNS; i++)
         {
