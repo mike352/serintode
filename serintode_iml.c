@@ -8,7 +8,7 @@
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode.c -o serintode -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_iml.c -o serintode_iml.o -liml -lcblas -lgmp -lm
 
 int main()
 {
@@ -16,8 +16,8 @@ int main()
     long const MAX_DIGITS=1000L; /*This needs to be input*/
     long const NUM_COEFFS=31L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
     long const MAX_ODE_ORDER=2L; /*This needs to be input or automated*/
-    long const NUM_CHECKS=0L; /*Should be greater than 0*/
-    long const MAX_POLY_ORDER=2;//floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
+    long const NUM_CHECKS=1L; /*Should be greater than 0*/
+    long const MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
     long const COLUMNS=(MAX_ODE_ORDER+1)*(MAX_POLY_ORDER+1);
     long const ROWS=COLUMNS+NUM_CHECKS; 
     long i,j,k;
@@ -84,7 +84,7 @@ int main()
         }
     }
     
-    
+    /*
     printf("Input Matrix M:\n");
     for (i = 0; i < ROWS; i++)
     {
@@ -93,15 +93,16 @@ int main()
             gmp_fprintf (stdout, "  %Zd", M[i * COLUMNS + j]);
         }
         fprintf (stdout, "\n");
-    }
+    }*/
     
     
     //nulldim = nullspaceMP (ROWS, COLUMNS, M, &N);
     nulldim = kernelMP(ROWS,COLUMNS,M,&N,1L);
+    
+    mpz_set_ui(temp,0L);
     if (nulldim>0L)
     {
         //printf("Checking whether solution is spurious.\n");
-        mpz_set_ui(temp,0L);
         for (i = 0L; i < COLUMNS; i++)
         {
             for (j = 0L; j < nulldim; j++)
