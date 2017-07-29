@@ -3,40 +3,37 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <time.h>
 #include <math.h>
 #include "gmp.h"
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode_iml_auto.c -o serintode_iml_auto.o -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_nonlin2.c -o serintode_nonlin2.o -liml -lcblas -lgmp -lm
 //Output file sum: gives the sequence name of found solutions, the number of coefficients, the ODE order, the largest polynomial order, the number of free variables
 //Output file eqs: gives the sequence name of found solutions, plus the Maple input for the ODE
 
 int main()
 {
-    time_t start,end;
-    char *finname = "tests/catalan.txt"; /*File name of data*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
     long const NUM_CHECKS=0L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=1L; 
-    long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
+    //long const MIN_ODE_ORDER=1L; 
+    long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
     char fouteqsname[64]; /*Output equations file name*/
     long NUM_COEFFS=0L;
-    long MAX_ODE_ORDER=0L; 
+    //long MAX_ODE_ORDER=0L; 
     long ODE_ORDER=0L;
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n;
+    long i,j,k; //n
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
-    mpz_t *S, *M, *N, temp, temp2,coeff;
+    mpz_t *S, *Sx2, *DS, *DSx2, *SDS, *DS2, *M, *N, temp, temp2,coeff;
     FILE *fin=NULL, *fouteqs=NULL; //, *foutsum=NULL
     char *fgcheck, nulldimflag=0;
     
-    time(&start);
     
     mpz_inits(temp,temp2,coeff,NULL);
     
@@ -71,9 +68,14 @@ int main()
     */
     
     S = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
+    Sx2 = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
+    DS = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
+    DSx2 = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
+    SDS = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
+    DS2 = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
     M = (mpz_t*) malloc(MAX_COEFFS*MAX_COEFFS*sizeof(mpz_t)); //Maximum number needed below
     
-    if((S == NULL) || (M == NULL))
+    if((S == NULL) || (Sx2 == NULL) || (DS == NULL) || (DSx2 == NULL) || (SDS == NULL) || (DS2 == NULL) || (M == NULL))
     {
         fprintf(stderr, "No memory left for allocating with malloc for input matrices. %s",strerror(errno));
         fclose(fin);
@@ -107,29 +109,114 @@ int main()
         }
     }
     fclose(fin);
-        
-    /*    
+    
+    
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_inits(Sx2[i],DS[i],DSx2[i],SDS[i],DS2[i],NULL);
+    }
+    
+    
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_set_ui(temp,0L);
+        for (j=0L;j<i+1L;j++)
+        {
+            mpz_mul(temp2,S[j],S[i-j]);
+            mpz_add(temp,temp,temp2);
+        }
+        mpz_set(Sx2[i],temp);
+    }
+    
+    for (i=0L;i<NUM_COEFFS-1L;i++)
+    {
+        mpz_mul_ui(temp,S[i+1L],i+1L);
+        mpz_set(DS[i],temp);
+    }
+    
+    for (i=0L;i<NUM_COEFFS-1L;i++)
+    {
+        mpz_set_ui(temp,0L);
+        for (j=0L;j<i+1L;j++)
+        {
+            mpz_mul(temp2,DS[j],DS[i-j]);
+            mpz_add(temp,temp,temp2);
+        }
+        mpz_set(DSx2[i],temp);
+    }
+    
+    for (i=0L;i<NUM_COEFFS-1L;i++)
+    {
+        mpz_set_ui(temp,0L);
+        for (j=0L;j<i+1L;j++)
+        {
+            mpz_mul(temp2,S[j],DS[i-j]);
+            mpz_add(temp,temp,temp2);
+        }
+        mpz_set(SDS[i],temp);
+    }
+    
+    for (i=0L;i<NUM_COEFFS-2L;i++)
+    {
+        mpz_fac_ui(temp,i+2L);
+        mpz_fac_ui(temp2,i);
+        mpz_divexact(coeff,temp,temp2); 
+        mpz_mul(temp,coeff,S[i+2L]);
+        mpz_set(DS2[i],temp);
+    }
+    
+    /*
     printf("Input S Matrix:\n");
     for (i=0L;i<NUM_COEFFS;i++)
     {
         gmp_fprintf (stdout, "%Zd ", S[i]);
     }
-    printf("\n\n");
+    printf("\n");
+    printf("Input Sx2 Matrix:\n");
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        gmp_fprintf (stdout, "%Zd ", Sx2[i]);
+    }
+    printf("\n");
+    printf("Input DS Matrix:\n");
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        gmp_fprintf (stdout, "%Zd ", DS[i]);
+    }
+    printf("\n");
+    printf("Input SSx2 Matrix:\n");
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        gmp_fprintf (stdout, "%Zd ", DSx2[i]);
+    }
+    printf("\n");
+    printf("Input SDS Matrix:\n");
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        gmp_fprintf (stdout, "%Zd ", SDS[i]);
+    }
+    printf("\n");
+    printf("Input DS2 Matrix:\n");
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        gmp_fprintf (stdout, "%Zd ", DS2[i]);
+    }
+    printf("\n");
     */
     
-    printf("File %s:\n",finname);
-    MAX_ODE_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/2L)-1L;
-    for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
+    
+    //MAX_ODE_ORDER=floor((NUM_COEFFS-NUM_CHECKS-2L)/3L);
+    //for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
     {
-        ODE_ORDER=n; //printf("Starting ODE order %ld\n",ODE_ORDER);
-        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(ODE_ORDER+1L))-2L;
-        if (MAX_POLY_ORDER == 0L)
+        ODE_ORDER=5L; //printf("Starting ODE order %ld\n",ODE_ORDER);
+        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS-2L)/(ODE_ORDER+1L))-1L;
+        /*if (MAX_POLY_ORDER == 0L)
         {
             break;
-        }
+        }*/
         COLUMNS=(ODE_ORDER+1L)*(MAX_POLY_ORDER+1L);
         ROWS=COLUMNS+NUM_CHECKS; 
-        printf("Checking for ODE order %ld with polynom coeffs of order %ld and %ld checks\n",ODE_ORDER,MAX_POLY_ORDER,NUM_CHECKS);
+        printf("Checking for nonlinear ODE with polynom coeffs of order %ld and %ld checks\n",MAX_POLY_ORDER,NUM_CHECKS);
         
         for (i=0L;i<COLUMNS;i++)
         {
@@ -141,17 +228,14 @@ int main()
         
         for (i=0L;i<MAX_POLY_ORDER+1L;i++)
         {
-            for (j=0;j<ODE_ORDER+1L;j++)
+            for (k=i;k<ROWS;k++)
             {
-                for (k=i;k<ROWS;k++)
-                {
-                    mpz_fac_ui(temp,j+k-i);
-                    mpz_fac_ui(temp2,k-i);
-                    mpz_divexact(coeff,temp,temp2); //coeff = (j+k-i)!/(k-i)!
-                    mpz_mul(temp,coeff,S[j+k-i]); //printf("Check i=%ld, j=%ld, k=%ld, index=%ld, index=%ld, max=%ld  ",i,j,k,j+k-i,k*COLUMNS+i*(ODE_ORDER+1)+j,ROWS*COLUMNS);
-                    //mpz_out_str(NULL,10,coeff); printf("\n");
-                    mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+j],temp);
-                }
+                mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+0L],S[k-i]);
+                mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+1L],DS[k-i]);
+                mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+2L],DS2[k-i]);
+                mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+3L],Sx2[k-i]);
+                mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+4L],SDS[k-i]);
+                mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+5L],DSx2[k-i]);
             }
         }
         
@@ -242,10 +326,10 @@ int main()
                 }
                 free(N);
             }
-            else
+            /*else
             {
                 break;
-            }
+            }*/
         }
         else
         {
@@ -263,7 +347,32 @@ int main()
     {
         mpz_clear(S[i]);
     }
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_clear(Sx2[i]);
+    }
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_clear(DS[i]);
+    }
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_clear(DSx2[i]);
+    }
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_clear(SDS[i]);
+    }
+    for (i=0L;i<NUM_COEFFS;i++)
+    {
+        mpz_clear(DS2[i]);
+    }
     free(S);
+    free(Sx2);
+    free(DS);
+    free(DSx2);
+    free(SDS);
+    free(DS2);
     free(M);
     
     
@@ -292,7 +401,7 @@ int main()
         */
         printf("****Found a solution!****\n");
         
-        sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
+        sprintf(fouteqsname,"%s_nonlinsol_%ld-checks.txt",finname,NUM_CHECKS);
         fouteqs = fopen(fouteqsname,"w");
         if (fouteqs==NULL)
         {
@@ -304,7 +413,6 @@ int main()
                 mpz_clear(N[i]);
             }
             free(N);
-            free(M);
             exit(EXIT_FAILURE);
         }
         setvbuf(fouteqs,NULL,_IOLBF,32);
@@ -313,7 +421,7 @@ int main()
         for (i=0L;i<ODE_ORDER+1L;i++)
         {
             mpz_set_ui(temp,0L);
-            for (j=0L;j<MAX_POLY_ORDER+1L;j++) //Start from 1 to remove order 0 ODEs
+            for (j=0L;j<MAX_POLY_ORDER+1L;j++) 
             {
                 mpz_abs(temp2,N[(i+j*(ODE_ORDER+1L))*nulldim]);
                 mpz_add(temp,temp,temp2);
@@ -351,15 +459,35 @@ int main()
                 }
                 fprintf(fouteqs,")");
                 printf(")");
-                if (i>0L)
+                if (i==0L)
+                {
+                    fprintf(fouteqs,"*y(x)");
+                    printf("*y");
+                }
+                else if (i==1L)
+                {
+                    fprintf(fouteqs,"*diff(y(x),x)");
+                    printf("*Dx");
+                }
+                else if (i==2L)
                 {
                     fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
                     printf("*Dx^%ld",i);
                 }
-                else
+                else if (i==3L)
                 {
-                    fprintf(fouteqs,"*y(x)");
-                    printf("*y(x)");
+                    fprintf(fouteqs,"*(y(x))^2");
+                    printf("*y^2");
+                }
+                else if (i==4L)
+                {
+                    fprintf(fouteqs,"*y(x)*diff(y(x),x)");
+                    printf("*y*Dx");
+                }
+                else if (i==5L)
+                {
+                    fprintf(fouteqs,"*(diff(y(x),x))^2");
+                    printf("*(diff(y(x),x))^2");
                 }
             }
         }
@@ -386,9 +514,7 @@ int main()
             printf("Series too short %ld checks\n",NUM_CHECKS);
         }
     }
-    
-    time(&end);
-    printf("\nEllapsed time %.fs\n",difftime(end,start));
+                
 
     mpz_clears(temp,temp2,coeff,NULL);
     //fclose(foutsum);
