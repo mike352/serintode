@@ -38,9 +38,9 @@ void combs(long **r, long *s, long k, long p, long q, long *arrindex)
 
 int main()
 {
-    char *finname = "tests/new_b006752.txt"; /*File name of data*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
     long const NUM_CHECKS=0L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=1L; 
+    long const MIN_ODE_ORDER=2L; 
     long const MIN_DEPTH=1L;
     long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
@@ -52,7 +52,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,l,m,n,p,numterms,maxnumterms,ordermaxnumterms,first,depthmax,nonzeroterms;
+    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms;
     long nulldim=0L;
     long **orderexp, *s, arrindex=0L;
     char input_string[MAX_LINE_LENGTH+1L];
@@ -78,7 +78,7 @@ int main()
     
     if((I == NULL) || (M == NULL) || (temparray==NULL))
     {
-        fprintf(stderr, "No memory left for allocating. %s",strerror(errno));
+        fprintf(stderr, "No memory left for allocating I, M, or temparray. %s",strerror(errno));
         fclose(fin);
         exit(EXIT_FAILURE);
     }
@@ -121,9 +121,30 @@ int main()
     maxnumterms=NUM_COEFFS-NUM_CHECKS;
     
     D = (mpz_t **) malloc((MAX_ODE_ORDER+1L)*sizeof(mpz_t *));
+    if(D==NULL)
+    {
+        fprintf(stderr, "No memory left for allocating D matrix. %s",strerror(errno));
+        free(I);
+        free(M);
+        free(temparray);
+        exit(EXIT_FAILURE);
+    }
     for (i=0L;i<(MAX_ODE_ORDER+1L);i++)
     {
-        D[i] = (mpz_t *) malloc(NUM_COEFFS*sizeof(mpz_t));
+        D[i] = (mpz_t *) calloc(NUM_COEFFS,sizeof(mpz_t));
+        if(D[i]==NULL)
+        {
+            fprintf(stderr, "No memory left for allocating D array. %s",strerror(errno));
+            for (j=0L;j<i;j++)
+            {
+                free(D[j]);
+            }
+            free(D);
+            free(I);
+            free(M);
+            free(temparray);
+            exit(EXIT_FAILURE);
+        }
     }
     for (i=0L;i<(MAX_ODE_ORDER+1L);i++)
     {
@@ -181,9 +202,40 @@ int main()
         }
         
         S = (mpz_t **) malloc(ordermaxnumterms*sizeof(mpz_t *));
+        if(S==NULL)
+        {
+            fprintf(stderr, "No memory left for allocating S matrix. %s",strerror(errno));
+            for (j=0L;j<NUM_COEFFS;j++)
+            {
+                free(D[j]);
+            }
+            free(D);
+            free(I);
+            free(M);
+            free(temparray);
+            exit(EXIT_FAILURE);
+        }
         for (i=0L;i<ordermaxnumterms;i++)
         {
-            S[i] = (mpz_t *) malloc(NUM_COEFFS*sizeof(mpz_t));
+            S[i] = (mpz_t *) calloc(NUM_COEFFS,sizeof(mpz_t));
+            if(S[i]==NULL)
+            {
+                fprintf(stderr, "No memory left for allocating S array. %s",strerror(errno));
+                for (j=0L;j<NUM_COEFFS;j++)
+                {
+                    free(D[j]);
+                }
+                free(D);
+                for (j=0L;j<i;j++)
+                {
+                    free(S[j]);
+                }
+                free(S);
+                free(I);
+                free(M);
+                free(temparray);
+                exit(EXIT_FAILURE);
+            }
         }
         
         for (i=0L;i<ordermaxnumterms;i++)
@@ -212,9 +264,50 @@ int main()
             
             s = (long *) calloc((ODE_ORDER+1),sizeof(long));
             orderexp = (long **) malloc((numterms+1L)*sizeof(long *));
+            if ((orderexp==NULL) || (s==NULL))
+            {
+                fprintf(stderr, "No memory left for allocating orderexp matrix. %s",strerror(errno));
+                for (j=0L;j<NUM_COEFFS;j++)
+                {
+                    free(D[j]);
+                }
+                free(D);
+                for (j=0L;j<ordermaxnumterms;j++)
+                {
+                    free(S[j]);
+                }
+                free(S);
+                free(I);
+                free(M);
+                free(temparray);
+                exit(EXIT_FAILURE);
+            }
             for (i=0;i<(numterms+1L);i++)
             {
                 orderexp[i] = (long *) calloc((ODE_ORDER+1),sizeof(long));
+                if(orderexp[i]==NULL)
+                {
+                    fprintf(stderr, "No memory left for allocating orderexp array. %s",strerror(errno));
+                    for (j=0L;j<NUM_COEFFS;j++)
+                    {
+                        free(D[j]);
+                    }
+                    free(D);
+                    for (j=0L;j<ordermaxnumterms;j++)
+                    {
+                        free(S[j]);
+                    }
+                    free(S);
+                    for (j=0L;j<i;j++)
+                    {
+                        free(orderexp[j]);
+                    }
+                    free(s);
+                    free(I);
+                    free(M);
+                    free(temparray);
+                exit(EXIT_FAILURE);
+                }
             }
             arrindex=0L;
             
