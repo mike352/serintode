@@ -15,18 +15,23 @@ int main()
     char *fname = "tests/catalan.txt"; /*File name of data*/
     long const MAX_DIGITS=1000L; /*This needs to be input*/
     long const NUM_COEFFS=31L; /*This needs to be input. If changing type, change n declaration and n equating twice below*/ 
-    long const MAX_ODE_ORDER=2L; /*This needs to be input or automated*/
-    long const NUM_CHECKS=12L; /*Should be greater than 0*/
-    long const MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
+    long const MAX_ODE_ORDER;//=2L; /*This needs to be input or automated*/
+    long const NUM_CHECKS=0L; /*Should be greater than 0*/
+    long const MAX_POLY_ORDER;//=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2; /*This needs to be input or automated*/
     long const COLUMNS=(MAX_ODE_ORDER+1)*(MAX_POLY_ORDER+1);
     long const ROWS=COLUMNS+NUM_CHECKS; 
-    long i,j,k;
+    long i,j,k,n;
     long nulldim;
     char input_string[MAX_DIGITS+1L];
     mpz_t *S, *M, *N, temp, temp2,coeff;
     FILE* fid=NULL;
     char *fgcheck;
     
+    
+    for (n=1L;n<NUM_COEFFS-2;n++)
+    {
+        MAX_ODE_ORDER=n;
+        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(MAX_ODE_ORDER+1))-2;
     printf("Checking for ODE order %ld with polynomial coefficients of order %ld and %ld checks\n",MAX_ODE_ORDER,MAX_POLY_ORDER,NUM_CHECKS);
     
     mpz_inits(temp,temp2,coeff,NULL);
@@ -57,6 +62,7 @@ int main()
             {
                 mpz_clear(S[j]);
             }
+            free(S);
             fclose(fid);
             return 1;
         }    
@@ -147,6 +153,7 @@ int main()
         mpz_clear(N[i]);
     }
     mpz_clears(temp,temp2,coeff,NULL);
+    free(S);
     free(M);
     free(N);
     fclose(fid);
