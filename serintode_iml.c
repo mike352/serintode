@@ -139,6 +139,7 @@ int main()
             }
         }
         
+        //Matrix column form: 0th order poly coeffs up to ODE order, then order 1 poly coeffs up to ODE order, etc
         for (i=0L;i<MAX_POLY_ORDER+1L;i++)
         {
             for (j=0;j<ODE_ORDER+1L;j++)

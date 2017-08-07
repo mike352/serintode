@@ -394,6 +394,7 @@ int main()
                 }
             }
             
+            //Matrix column form: 0th order poly coeffs up to numterms, then order 1 poly coeffs up to numterms, etc
             for (i=0L;i<MAX_POLY_ORDER+1L;i++)
             {
                 for (j=i;j<ROWS;j++)
