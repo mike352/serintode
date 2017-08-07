@@ -472,11 +472,7 @@ int main()
                 }
                 else
                 {
-<<<<<<< HEAD
                     printf("Spurious null vectors.\n");
-=======
-                    //printf("Spurious null vectors.\n");
->>>>>>> ebeefa96bf4a758193788a7d02e97a1e5ca7022f
                 }
             }
             

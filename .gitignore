@@ -51,6 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Test data
+# Test data, old files
+oeis/
+serintode_iml_auto_old.c
 tests/
 .directory
