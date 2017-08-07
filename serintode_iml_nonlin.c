@@ -8,7 +8,7 @@
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode_nonlin2.c -o serintode_nonlin2.o -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_nonlin.c -o serintode_nonlin.o -liml -lcblas -lgmp -lm
 //Output file sum: gives the sequence name of found solutions, the number of coefficients, the ODE order, the largest polynomial order, the number of free variables
 //Output file eqs: gives the sequence name of found solutions, plus the Maple input for the ODE
 
@@ -472,11 +472,7 @@ int main()
                 }
                 else
                 {
-<<<<<<< HEAD
-                    printf("Spurious null vectors.\n");
-=======
                     //printf("Spurious null vectors.\n");
->>>>>>> ebeefa96bf4a758193788a7d02e97a1e5ca7022f
                 }
             }
             
@@ -510,7 +506,7 @@ int main()
                 }
                 if (nonzeroterms<2L)
                 {
-                    printf("Spurious equation with only 1 non-zero term.\n");
+                    printf("Spurious equation with none or only 1 non-zero term.\n");
                     nulldimflag=0;
                     for (i=0L;i<COLUMNS*nulldim;i++)
                     {
@@ -714,6 +710,5 @@ int main()
         mpz_clear(temparray[i]);
     }
     mpz_clears(temp,temp2,coeff,NULL);
-    //fclose(foutsum);
     exit(EXIT_SUCCESS);
 }
