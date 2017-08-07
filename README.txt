@@ -44,4 +44,4 @@ VERSION THAT RELIES ON flint
 serintode_flint uses the flint library, http://www.flintlib.org/, which uses fully arbitrary precision integers via GMP for all of its calculations, without using intermediary mod p calculations. In testing, it is slower than IML. For simply determining whether to construct the nullspace, that is, whether COLUMNS-RANK>0, it is only roughly 5% slower. But for the actual construction of the nullspace, it can be 3x slower for a matrix of size 400 or so. IML checks whether the matrix annihilates the nullspace vectors, but flint doesn't appear to do that. I plan to add that in myself. That may be the reason why flint sometimes gives spurious results unless enough checks are given. More testing is needed to determine that question. 
 
 Compilation can be done via:
-gcc -Wall serintode_flint_auto.c -o serintode_flint_auto.o -lflint -lgmp -lm -I /usr/local/include/flint
+gcc -Wall serintode_flint.c -o serintode_flint.o -lflint -lgmp -lm -I /usr/local/include/flint
