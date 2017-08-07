@@ -38,7 +38,7 @@ void combs(long **r, long *s, long k, long p, long q, long *arrindex)
 
 int main()
 {
-    char *finname = "tests/3-colorings.txt"; /*File name of data*/
+    char *finname = "tests/catalan.txt"; /*File name of data*/
     long const NUM_CHECKS=0L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=2L; 
     long const MIN_DEPTH=1L;
@@ -470,6 +470,10 @@ int main()
                 {
                     nulldimflag=1;
                 }
+                else
+                {
+                    //printf("Spurious null vectors.\n");
+                }
             }
             
             if (nulldimflag==1)
@@ -707,5 +711,5 @@ int main()
     }
     mpz_clears(temp,temp2,coeff,NULL);
     //fclose(foutsum);
-    return 0;
+    exit(EXIT_SUCCESS);
 }
