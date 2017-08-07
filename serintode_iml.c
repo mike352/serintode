@@ -17,7 +17,7 @@ int main()
 {
     time_t start,end;
     char *finname = "tests/new_Chi3_w.ser"; /*File name of data*/
-    long const NUM_CHECKS=20L; /*Should be greater than 0*/
+    long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
@@ -29,7 +29,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n;
+    long i,j,k,n,nonzeroterms;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     mpz_t *S, *M, *N, temp, temp2,coeff;
@@ -222,19 +222,23 @@ int main()
         
         if (nulldimflag==1)
         {
-            //Check that the order is not 0
-            mpz_set_ui(temp,0L);
-            for (i=1L;i<ODE_ORDER+1L;i++)
+            nonzeroterms=0L;
+            for (i=0L;i<(ODE_ORDER+1L);i++)
             {
+                mpz_set_ui(temp,0L);
                 for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                 {
                     mpz_abs(temp2,N[(i+j*(ODE_ORDER+1L))*nulldim]);
                     mpz_add(temp,temp,temp2);
                 }
+                if (mpz_get_ui(temp)!=0L)
+                {
+                    nonzeroterms++;
+                }
             }
-            if (mpz_get_ui(temp)==0L)
+            if (nonzeroterms<2L)
             {
-                //printf("Spurious order 0 equation. ");
+                printf("Spurious equation with none or only 1 non-zero term.\n");
                 nulldimflag=0;
                 for (i=0L;i<COLUMNS*nulldim;i++)
                 {
@@ -391,6 +395,5 @@ int main()
     printf("\nEllapsed time %.fs\n",difftime(end,start));
 
     mpz_clears(temp,temp2,coeff,NULL);
-    //fclose(foutsum);
-    return 0;
+    exit(EXIT_SUCCESS);
 }
