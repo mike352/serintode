@@ -74,7 +74,9 @@ int main()
     
     M = (mpz_t*) malloc(ROWS*COLUMNS*sizeof(mpz_t));
     
-    //Matrix column form: 0th order poly coeffs up to ODE order, then order 1 poly coeffs up to ODE order, etc
+    //Null vector has the form: 0th order poly coeffs of first term up to ODE order term, order 1 poly coeffs of all terms, order 2 poly coeffs of all terms, etc
+    //Matrix rows correspond to each successive order that needs to be annihilated
+    //Matrix columns are the result of the derivatives and poly coeffs acting on input series to give a particular final order
     for (i=0L;i<MAX_POLY_ORDER+1L;i++)
     {
         for (j=0;j<MAX_ODE_ORDER+1L;j++)
