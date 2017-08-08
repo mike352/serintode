@@ -9,7 +9,7 @@
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode_iml_auto.c -o serintode_iml_auto.o -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_iml.c -o serintode_iml.o -liml -lcblas -lgmp -lm
 //Output file sum: gives the sequence name of found solutions, the number of coefficients, the ODE order, the largest polynomial order, the number of free variables
 //Output file eqs: gives the sequence name of found solutions, plus the Maple input for the ODE
 
@@ -29,12 +29,14 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n,nonzeroterms;
+    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     mpz_t *S, *M, *N, temp, temp2,coeff;
     FILE *fin=NULL, *fouteqs=NULL; //, *foutsum=NULL
     char *fgcheck, nulldimflag=0;
+
+    setvbuf(stdout,NULL,_IONBF,0);
     
     time(&start);
     
@@ -225,23 +227,55 @@ int main()
         
         if (nulldimflag==1)
         {
+            //Check that the number of orders is not 1
+            ordersused=0L;
+            termsused=0L;
             nonzeroterms=0L;
-            for (i=0L;i<(ODE_ORDER+1L);i++)
+            MAX_FOUND_POLY_ORDER=0L;
+            MAX_FOUND_ODE_ORDER=0L;
+            for (i=0L;i<ODE_ORDER+1L;i++)
             {
-                mpz_set_ui(temp,0L);
                 for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                 {
-                    mpz_abs(temp2,N[(i+j*(ODE_ORDER+1L))*nulldim]);
-                    mpz_add(temp,temp,temp2);
+                    if (mpz_cmp_ui(N[(i+j*(ODE_ORDER+1L))*nulldim],0L)!=0L)
+                    {
+                        nonzeroterms++;
+                        if (MAX_FOUND_POLY_ORDER<j)
+                        {
+                            MAX_FOUND_POLY_ORDER=j;
+                        }
+                    }
                 }
-                if (mpz_get_ui(temp)!=0L)
+                if (termsused<nonzeroterms)
                 {
-                    nonzeroterms++;
+                    termsused=nonzeroterms;
+                    ordersused++;
+                    MAX_FOUND_ODE_ORDER=i;
                 }
             }
-            if (nonzeroterms<2L)
+            if (ordersused<2L)
             {
-                printf("Spurious equation with none or only 1 non-zero term.\n");
+                //printf("Spurious equation with %ld order term.\n",ordersused);
+                nulldimflag=0;
+                for (i=0L;i<COLUMNS*nulldim;i++)
+                {
+                    mpz_clear(N[i]);
+                }
+                free(N);
+            }
+            else if (termsused<ordersused+1L)
+            {
+                //printf("Polynomial coefficients only have one term each.\n",ordersused);
+                nulldimflag=0;
+                for (i=0L;i<COLUMNS*nulldim;i++)
+                {
+                    mpz_clear(N[i]);
+                }
+                free(N);
+            }
+            else if (MAX_FOUND_ODE_ORDER<ODE_ORDER)
+            {
+                //printf("Spurious solution came from taking a lot of derivatives, then found lower order ODE.\n");
                 nulldimflag=0;
                 for (i=0L;i<COLUMNS*nulldim;i++)
                 {

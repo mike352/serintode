@@ -8,7 +8,7 @@
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode_nonlin.c -o serintode_nonlin.o -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_iml_nonlin.c -o serintode_iml_nonlin.o -liml -lcblas -lgmp -lm
 //Output file sum: gives the sequence name of found solutions, the number of coefficients, the ODE order, the largest polynomial order, the number of free variables
 //Output file eqs: gives the sequence name of found solutions, plus the Maple input for the ODE
 
@@ -39,9 +39,9 @@ void combs(long **r, long *s, long k, long p, long q, long *arrindex)
 int main()
 {
     char *finname = "tests/catalan.txt"; /*File name of data*/
-    long const NUM_CHECKS=0L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=2L; 
-    long const MIN_DEPTH=1L;
+    long const NUM_CHECKS=10L; /*Should be greater than 0*/
+    long const MIN_ODE_ORDER=1L; 
+    long const MIN_DEPTH=2L;
     long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
@@ -52,7 +52,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms;
+    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER;
     long nulldim=0L;
     long **orderexp, *s, arrindex=0L;
     char input_string[MAX_LINE_LENGTH+1L];
@@ -483,34 +483,51 @@ int main()
             {
                 for (k=0L;k<nulldim;k++)
                 {
-                    //Check that there's not just one term
+                    //Check that the number of orders is not 1
+                    ordersused=0L;
+                    termsused=0L;
                     nonzeroterms=0L;
+                    MAX_FOUND_POLY_ORDER=0L;
                     for (i=0L;i<numterms;i++)
                     {
-                        mpz_set_ui(temp,0L);
                         for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                         {
-                            mpz_abs(temp2,N[(i+j*numterms)*nulldim+k]);
-                            mpz_add(temp,temp,temp2);
+                            if (mpz_cmp_ui(N[(i+j*numterms)*nulldim+k],0L)!=0L)
+                            {
+                                nonzeroterms++;
+                                if (MAX_FOUND_POLY_ORDER<j)
+                                {
+                                    MAX_FOUND_POLY_ORDER=j;
+                                }
+                            }
                         }
-                        if (mpz_get_ui(temp)!=0L)
+                        if (termsused<nonzeroterms)
                         {
-                            nonzeroterms++;
+                            termsused=nonzeroterms;
+                            ordersused++;
                         }
                     }
-                    if (nonzeroterms<2L)
+                    if (ordersused<2L)
                     {
-                        continue;
+                        printf("Spurious equation with %ld order term.\n",ordersused);
+                        nulldimflag=0;
+                    }
+                    else if (termsused<ordersused+1L)
+                    {
+                        printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
+                        break;
                     }
                     else
                     {
                         break;
                     }
                 }
-                if (nonzeroterms<2L)
+                if (nulldimflag==1)
                 {
-                    printf("Spurious equation with none or only 1 non-zero term.\n");
-                    nulldimflag=0;
+                    break;
+                }
+                else
+                {
                     for (i=0L;i<COLUMNS*nulldim;i++)
                     {
                         mpz_clear(N[i]);
@@ -522,10 +539,6 @@ int main()
                     }
                     free(orderexp);
                     free(s);
-                }
-                else
-                {
-                    break;
                 }
             }
             else

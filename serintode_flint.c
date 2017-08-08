@@ -11,17 +11,17 @@
 #include "fmpz_mat.h"
 
 
-//Compile: gcc -Wall serintode_flint_auto.c -o serintode_flint_auto.o -lflint -lgmp -lm -I /usr/local/include/flint
+//Compile: gcc -Wall serintode_flint.c -o serintode_flint.o -lflint -lgmp -lm -I /usr/local/include/flint
 //There are issues with the results. It can give spurious results unless enough checks are used. This could maybe be caused by the lack of checking of the final result (?)
 //Test case: file new_Chi3_w.ser, 20 checks, 400 MAX_COEFFS
 
 int main()
 {
     time_t start,end;
-    char *finname = "tests/new_Chi3_w.ser"; /*File name of data*/
-    long const NUM_CHECKS=20L; /*Should be greater than 0*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
+    long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
-    long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
+    long const MAX_COEFFS=300; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
     char fouteqsname[64]; /*Output equations file name*/
@@ -31,7 +31,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n,nonzeroterms;
+    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     fmpz_t temp, temp2, coeff;
@@ -105,7 +105,6 @@ int main()
         COLUMNS=(ODE_ORDER+1L)*(MAX_POLY_ORDER+1L);
         ROWS=COLUMNS+NUM_CHECKS; 
         printf("Checking for ODE order %ld with polynom coeffs of order %ld and %ld checks\n",ODE_ORDER,MAX_POLY_ORDER,NUM_CHECKS);
-        
         fmpz_mat_init(M,ROWS,COLUMNS);
         
         //Null vector has the form: 0th order poly coeffs of first term up to ODE order term, order 1 poly coeffs of all terms, order 2 poly coeffs of all terms, etc
@@ -126,6 +125,7 @@ int main()
                 }
             }
         }
+        
         
         /*
         printf("Input %ld x %ld M matrix\n",ROWS,COLUMNS);
@@ -190,24 +190,47 @@ int main()
         
         if (nulldimflag==1)
         {
-            //Check that there's not just one term
+            //Check that the number of orders is not 1
+            ordersused=0L;
+            termsused=0L;
             nonzeroterms=0L;
-            for (i=0L;i<(ODE_ORDER+1L);i++)
+            MAX_FOUND_POLY_ORDER=0L;
+            MAX_FOUND_ODE_ORDER=0L;
+            for (i=0L;i<ODE_ORDER+1L;i++)
             {
-                fmpz_set_ui(temp,0L);
                 for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                 {
-                    fmpz_abs(temp2,fmpz_mat_entry(N,i+j*(ODE_ORDER+1L),0));
-                    fmpz_add(temp,temp,temp2);
+                    if (fmpz_cmp_ui(fmpz_mat_entry(N,i+j*(ODE_ORDER+1L),0),0L)!=0L)
+                    {
+                        nonzeroterms++;
+                        if (MAX_FOUND_POLY_ORDER<j)
+                        {
+                            MAX_FOUND_POLY_ORDER=j;
+                        }
+                    }
                 }
-                if (fmpz_get_ui(temp)!=0L)
+                if (termsused<nonzeroterms)
                 {
-                    nonzeroterms++;
+                    termsused=nonzeroterms;
+                    ordersused++;
+                    MAX_FOUND_ODE_ORDER=i;
                 }
             }
-            if (nonzeroterms<2L)
+            if (ordersused<2L)
             {
-                printf("Spurious equation with only 1 non-zero term.\n");
+                //printf("Spurious equation with %ld order term.\n",ordersused);
+                nulldimflag=0;
+                fmpz_mat_clear(N);
+            }
+            else if (termsused<ordersused+1L)
+            {
+                //printf("Polynomial coefficients only have one term each.\n",ordersused);
+                nulldimflag=0;
+                fmpz_mat_clear(N);
+            }
+            else if (MAX_FOUND_ODE_ORDER<ODE_ORDER)
+            {
+                //printf("Spurious solution came from taking a lot of derivatives, then found lower order ODE.\n");
                 nulldimflag=0;
                 fmpz_mat_clear(N);
             }
