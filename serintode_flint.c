@@ -331,7 +331,6 @@ int main()
         } //printf("GCD = "); fmpz_print(coeff); printf("\n");
         firstorder=0L;
         fprintf(fouteqs,"ODE%s := ",finname);
-            //for (n=0;n<nulldim;n++){firstorder=0L; //For showing all solutions, uncomment and change all bestnulldim to n
         for (i=0L;i<ODE_ORDER+1L;i++)
         {
             fmpz_set_ui(temp,0L);
@@ -407,7 +406,6 @@ int main()
         }
         fprintf(fouteqs,":\n");
         printf("=0\n");
-            //} printf("Total nullspace dimension = %ld",nulldim); //for showing all solutions, uncomment
         fmpz_mat_clear(N);
         fclose(fouteqs);
     }
