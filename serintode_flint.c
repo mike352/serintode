@@ -18,7 +18,7 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/3-colorings.txt"; /*File name of data*/
+    char *finname = "tests/new_b280166.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=300; /*Should be checked for very large sequences*/
@@ -301,7 +301,7 @@ int main()
         */
         printf("\n***********************\n");
         printf("***Found a solution!***\n");
-        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-NUM_CHECKS)));
+        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-NUM_CHECKS-ODE_ORDER)));
         printf("***********************\n\n");
         sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
         fouteqs = fopen(fouteqsname,"w");
