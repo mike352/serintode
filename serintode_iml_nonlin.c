@@ -8,7 +8,7 @@
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode_iml_nonlin.c -o serintode_iml_nonlin.o -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_iml_nonlin.c -o nonlin.o -liml -lcblas -lgmp -lm
 //Output file sum: gives the sequence name of found solutions, the number of coefficients, the ODE order, the largest polynomial order, the number of free variables
 //Output file eqs: gives the sequence name of found solutions, plus the Maple input for the ODE
 
@@ -40,8 +40,8 @@ int main()
 {
     char *finname = "tests/catalan.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=1L; 
-    long const MIN_DEPTH=2L;
+    long const MIN_ODE_ORDER=2L; 
+    long const MIN_DEPTH=1L;
     long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
@@ -637,6 +637,7 @@ int main()
         fprintf(fouteqs,"ODE%s := ",finname);
         for (n=0L;n<nulldim;n++)
         {
+            nonzeroterms=0L;
             for (i=0L;i<numterms;i++)
             {
                 mpz_set_ui(temp,0L);
@@ -647,6 +648,7 @@ int main()
                 }
                 if (mpz_cmp_ui(temp,0L)>0L)
                 {
+                    nonzeroterms++;
                     if (i>0L)
                     {
                         fprintf(fouteqs,"+");
@@ -698,6 +700,7 @@ int main()
             }
             fprintf(fouteqs,":\n");
             printf("=0\n");
+            printf("Confidence level: %02ld%%\n",(long) floor((double) 100L-100L*nonzeroterms/(NUM_COEFFS-NUM_CHECKS)));
         }
         
         //fprintf(foutsum,"%ld, %ld\n",MAX_FOUND_ORDER,NUM_COEFFS-NUM_CHECKS-(ODE_ORDER+1L)*(MAX_FOUND_ORDER+1L));

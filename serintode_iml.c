@@ -16,7 +16,7 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/new_Chi3_w.ser"; /*File name of data*/
+    char *finname = "tests/catalan.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
@@ -124,7 +124,7 @@ int main()
     for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
     {
         ODE_ORDER=n; //printf("Starting ODE order %ld\n",ODE_ORDER);
-        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/(ODE_ORDER+1L))-2L;
+        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/(ODE_ORDER+1L))-1L;
         if (MAX_POLY_ORDER == 0L)
         {
             break;
@@ -331,7 +331,10 @@ int main()
             fprintf (stdout, "\n"); 
         }
         */
-        printf("****Found a solution!****\n");
+        printf("\n***********************\n");
+        printf("***Found a solution!***\n");
+        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*termsused/(NUM_COEFFS-NUM_CHECKS)));
+        printf("***********************\n\n");
         
         sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
         fouteqs = fopen(fouteqsname,"w");
