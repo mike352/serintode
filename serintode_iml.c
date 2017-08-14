@@ -29,7 +29,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER;
+    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER,MIN_MAX_FOUND_POLY_ORDER,mintermsused,bestnulldim,firstterm,firstorder;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     mpz_t *S, *M, *N, temp, temp2,coeff;
@@ -228,29 +228,47 @@ int main()
         if (nulldimflag==1)
         {
             //Check that the number of orders is not 1
-            ordersused=0L;
-            termsused=0L;
-            nonzeroterms=0L;
-            MAX_FOUND_POLY_ORDER=0L;
-            MAX_FOUND_ODE_ORDER=0L;
-            for (i=0L;i<ODE_ORDER+1L;i++)
+            mintermsused=0;
+            MIN_MAX_FOUND_POLY_ORDER=MAX_POLY_ORDER;
+            for (k=0;k<nulldim;k++)
             {
-                for (j=0L;j<MAX_POLY_ORDER+1L;j++)
+                ordersused=0L;
+                termsused=0L;
+                nonzeroterms=0L;
+                MAX_FOUND_POLY_ORDER=0L;
+                MAX_FOUND_ODE_ORDER=0L;
+                for (i=0L;i<ODE_ORDER+1L;i++)
                 {
-                    if (mpz_cmp_ui(N[(i+j*(ODE_ORDER+1L))*nulldim],0L)!=0L)
+                    for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                     {
-                        nonzeroterms++;
-                        if (MAX_FOUND_POLY_ORDER<j)
+                        if (mpz_cmp_ui(N[(i+j*(ODE_ORDER+1L))*nulldim+k],0L)!=0L)
                         {
-                            MAX_FOUND_POLY_ORDER=j;
+                            nonzeroterms++;
+                            if (MAX_FOUND_POLY_ORDER<j)
+                            {
+                                MAX_FOUND_POLY_ORDER=j;
+                            }
                         }
                     }
+                    if (termsused<nonzeroterms)
+                    {
+                        termsused=nonzeroterms;
+                        ordersused++;
+                        MAX_FOUND_ODE_ORDER=i;
+                    }
                 }
-                if (termsused<nonzeroterms)
+                if (MIN_MAX_FOUND_POLY_ORDER>MAX_FOUND_POLY_ORDER)
                 {
-                    termsused=nonzeroterms;
-                    ordersused++;
-                    MAX_FOUND_ODE_ORDER=i;
+                    MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
+                    bestnulldim = k;
+                }
+                else if (MIN_MAX_FOUND_POLY_ORDER==MAX_FOUND_POLY_ORDER)
+                {
+                    if (mintermsused>termsused)
+                    {
+                        mintermsused=termsused;
+                        bestnulldim = k;
+                    }
                 }
             }
             if (ordersused<2L)
@@ -353,39 +371,51 @@ int main()
         }
         setvbuf(fouteqs,NULL,_IOLBF,32);
         //fprintf(foutsum,"%s: %ld, %ld, ",finname,NUM_COEFFS,ODE_ORDER);
+        firstorder=0L;
         fprintf(fouteqs,"ODE%s := ",finname);
         for (i=0L;i<ODE_ORDER+1L;i++)
         {
             mpz_set_ui(temp,0L);
             for (j=0L;j<MAX_POLY_ORDER+1L;j++) //Start from 1 to remove order 0 ODEs
             {
-                mpz_abs(temp2,N[(i+j*(ODE_ORDER+1L))*nulldim]);
+                mpz_abs(temp2,N[(i+j*(ODE_ORDER+1L))*nulldim+bestnulldim]);
                 mpz_add(temp,temp,temp2);
             }
             if (mpz_cmp_ui(temp,0L)>0L)
             {
-                if (i>0L)
+                firstorder++;
+                if (firstorder>1L)
                 {
                     fprintf(fouteqs,"+");
                     printf("+");
                 }
                 fprintf(fouteqs,"(");
                 printf("(");
+                firstterm=0L;
                 for (k=0L;k<MAX_POLY_ORDER+1L;k++)
                 {
-                    if (mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim],0L)!=0L)
+                    if (mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim],0L)!=0L)
                     {
-                        if ((k>0L)&&(mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim],0L)>0L))
+                        firstterm++;
+                        if ((firstterm>1L)&&(mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim],0L)>0L))
                         {
                             fprintf(fouteqs,"+");
                             printf("+");
                         }
-                        gmp_fprintf (fouteqs, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim]);
-                        gmp_fprintf (stdout, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim]);
+                        gmp_fprintf (fouteqs, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                        gmp_fprintf (stdout, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
                         if (k>0L)
                         {
-                            fprintf(fouteqs,"*x^%ld",k);
-                            printf("*x^%ld",k);
+                            if (k==1)
+                            {
+                                fprintf(fouteqs,"*x");
+                                printf("*x");
+                            }
+                            else
+                            {
+                                fprintf(fouteqs,"*x^%ld",k);
+                                printf("*x^%ld",k);
+                            }
                         }
                         if (MAX_FOUND_ORDER<k)
                         {
@@ -397,8 +427,16 @@ int main()
                 printf(")");
                 if (i>0L)
                 {
-                    fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
-                    printf("*Dx^%ld",i);
+                    if (i==1)
+                    {
+                        fprintf(fouteqs,"*diff(y(x),x)");
+                        printf("*Dx");
+                    }
+                    else
+                    {
+                        fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
+                        printf("*Dx^%ld",i);
+                    }
                 }
                 else
                 {

@@ -31,7 +31,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER;
+    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER,firstorder,firstterm;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     fmpz_t temp, temp2, coeff;
@@ -303,6 +303,7 @@ int main()
                 fmpz_gcd(coeff,coeff,fmpz_mat_entry(N,j,0));
             }
         } //printf("GCD = "); fmpz_print(coeff); printf("\n");
+        firstorder=0L;
         fprintf(fouteqs,"ODE%s := ",finname);
         for (i=0L;i<ODE_ORDER+1L;i++)
         {
@@ -314,18 +315,21 @@ int main()
             }
             if (fmpz_cmp_ui(temp,0L)>0L)
             {
-                if (i>0L)
+                firstorder++;
+                if (firstorder>1L)
                 {
                     fprintf(fouteqs,"+");
                     printf("+");
                 }
                 fprintf(fouteqs,"(");
                 printf("(");
+                firstterm=0L;
                 for (k=0L;k<MAX_POLY_ORDER+1L;k++)
                 {
                     if (fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),0),0L)!=0L)
                     {
-                        if ((k>0L)&&(fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),0),0L)>0L))
+                        firstterm++;
+                        if ((firstterm>1L)&&(fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),0),0L)>0L))
                         {
                             fprintf(fouteqs,"+");
                             printf("+");
@@ -335,8 +339,16 @@ int main()
                         fmpz_fprint(stdout, temp);
                         if (k>0L)
                         {
-                            fprintf(fouteqs,"*x^%ld",k);
-                            printf("*x^%ld",k);
+                            if (k==1)
+                            {
+                                fprintf(fouteqs,"*x");
+                                printf("*x");
+                            }
+                            else
+                            {
+                                fprintf(fouteqs,"*x^%ld",k);
+                                printf("*x^%ld",k);
+                            }
                         }
                         if (MAX_FOUND_ORDER<k)
                         {
@@ -348,8 +360,16 @@ int main()
                 printf(")");
                 if (i>0L)
                 {
-                    fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
-                    printf("*Dx^%ld",i);
+                    if (i==1)
+                    {
+                        fprintf(fouteqs,"*diff(y(x),x)");
+                        printf("*Dx");
+                    }
+                    else
+                    {
+                        fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
+                        printf("*Dx^%ld",i);
+                    }
                 }
                 else
                 {

@@ -52,7 +52,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER;
+    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,firstterm;
     long nulldim=0L;
     long **orderexp, *s, arrindex=0L;
     char input_string[MAX_LINE_LENGTH+1L];
@@ -649,18 +649,20 @@ int main()
                 if (mpz_cmp_ui(temp,0L)>0L)
                 {
                     nonzeroterms++;
-                    if (i>0L)
+                    if (nonzeroterms>1L)
                     {
                         fprintf(fouteqs,"+");
                         printf("+");
                     }
                     fprintf(fouteqs,"(");
                     printf("(");
+                    firstterm=0L;
                     for (k=0L;k<MAX_POLY_ORDER+1L;k++)
                     {
                         if (mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)!=0L)
                         {
-                            if ((k>0L)&&(mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)>0L))
+                            firstterm++;
+                            if ((firstterm>1L)&&(mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)>0L))
                             {
                                 fprintf(fouteqs,"+");
                                 printf("+");
@@ -669,8 +671,16 @@ int main()
                             gmp_fprintf (stdout, "%Zd", N[(i+k*numterms)*nulldim+n]);
                             if (k>0L)
                             {
-                                fprintf(fouteqs,"*x^%ld",k);
-                                printf("*x^%ld",k);
+                                if (k==1)
+                                {
+                                    fprintf(fouteqs,"*x");
+                                    printf("*x");
+                                }
+                                else
+                                {
+                                    fprintf(fouteqs,"*x^%ld",k);
+                                    printf("*x^%ld",k);
+                                }
                             }
                             if (MAX_FOUND_ORDER<k)
                             {
