@@ -2,8 +2,6 @@ serintode is a C program for searching for ODEs which annihilate an integer seri
 
 There are two programs based on two different libraries, IML and flint. The IML version has linear and algebraic ODE search versions. At the moment the flint version only has a linear ODE version. 
 
-Both versions rely on the construction of a matrix nullspace, the solution being one of the null vectors (all are solutions). Due to the way each library constructs the nullspace, the output from each program can be different. Both outputs give the corred ODE. The flint solutions may have smaller polynomial coefficient orders, although I haven't tested the differences extensively enough to say that's always or even usually the case.
-
 The program automatically determines the number of coefficients in a file and searches for ODEs of increasing order according to the number of coefficients and the number of checks required. It outputs the result both to the screen as well as a file created if a solution is found, using the input file name as the start of the file.
 
 Input files should have one coefficient per line.
@@ -17,6 +15,11 @@ If the coefficients are larger than 100,000 digits, the MAX_LINE_LENGTH should b
 The algebraic ODE version serintode_iml_nonlin.c searches for algebraic ODEs up to an order determined by the number of coefficients and up to n-products with the "depth" n determined also by the number of coefficients. An order 2 depth 3 ODE would have terms:
 p1*y + p2*Dx + p3*Dx^2 + p4*y^3 + p5*y^2*Dx + p6*y^2*Dx^2 + p7*y*(Dx)^2 + p8*y*Dx*Dx^2 + p9*y*(Dx^2)^2 + p10*(Dx)^3 + p11*(Dx)^2*Dx^2 + p12*Dx*(Dx^2)^2 + p13*(Dx^2)^3
 where p_k are polynomial coefficients.
+
+DIFFERENCES between IML and flint versions
+Both the IML and flint versions rely on the construction of a matrix nullspace, the output solution being one of the null vectors (all are solutions). Due to the way each library constructs the nullspace, the output from each program can be different. Both outputs give a correct ODE. The flint solutions may have smaller polynomial coefficient orders, although I haven't tested the differences extensively enough to say that's always or even usually the case. The IML documentation states that rather than "only compute a basis for the rational nullspace", it can "produce an integer basis for the sublattice of all integer vectors in the right kernel of the input matrix". Perhaps the differences in the null space output between flint and IML are due to IML going beyond the rational nullspace and considering the integer sublattice of the nullspace. 
+
+The IML version is faster than the flint version. IML also checks the result to see if indeed the nullspace it constructed is valid. The flint version doesn't appear to do this.
 
 
 VERSIONS THAT RELY ON IML
