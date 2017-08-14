@@ -18,7 +18,7 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/catalan.txt"; /*File name of data*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=300; /*Should be checked for very large sequences*/
@@ -31,7 +31,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER,firstorder,firstterm;
+    long i,j,k,n,nonzeroterms,ordersused,termsused, MIN_MAX_FOUND_POLY_ORDER,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER, firstorder,firstterm, mintermsused, bestnulldim, finalorders;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     fmpz_t temp, temp2, coeff;
@@ -191,44 +191,70 @@ int main()
         if (nulldimflag==1)
         {
             //Check that the number of orders is not 1
-            ordersused=0L;
-            termsused=0L;
-            nonzeroterms=0L;
-            MAX_FOUND_POLY_ORDER=0L;
-            MAX_FOUND_ODE_ORDER=0L;
-            for (i=0L;i<ODE_ORDER+1L;i++)
+            mintermsused=0;
+            MIN_MAX_FOUND_POLY_ORDER=MAX_POLY_ORDER+1L;
+            bestnulldim=0L;
+            finalorders=0;
+            for (k=0;k<nulldim;k++)
             {
-                for (j=0L;j<MAX_POLY_ORDER+1L;j++)
+                ordersused=0L;
+                termsused=0L;
+                nonzeroterms=0L;
+                MAX_FOUND_POLY_ORDER=0L;
+                MAX_FOUND_ODE_ORDER=0L;
+                for (i=0L;i<ODE_ORDER+1L;i++)
                 {
-                    if (fmpz_cmp_ui(fmpz_mat_entry(N,i+j*(ODE_ORDER+1L),0),0L)!=0L)
+                    for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                     {
-                        nonzeroterms++;
-                        if (MAX_FOUND_POLY_ORDER<j)
+                        if (fmpz_cmp_ui(fmpz_mat_entry(N,i+j*(ODE_ORDER+1L),k),0L)!=0L)
                         {
-                            MAX_FOUND_POLY_ORDER=j;
+                            nonzeroterms++;
+                            if (MAX_FOUND_POLY_ORDER<j)
+                            {
+                                MAX_FOUND_POLY_ORDER=j;
+                            }
+                        }
+                    }
+                    if (termsused<nonzeroterms)
+                    {
+                        termsused=nonzeroterms;
+                        ordersused++;
+                        MAX_FOUND_ODE_ORDER=i;
+                    }
+                }
+                if (MAX_FOUND_ODE_ORDER==ODE_ORDER)
+                {
+                    if (MIN_MAX_FOUND_POLY_ORDER>MAX_FOUND_POLY_ORDER)
+                    {
+                        MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
+                        mintermsused=termsused;
+                        finalorders=ordersused;
+                        bestnulldim = k;
+                    }
+                    else if (MIN_MAX_FOUND_POLY_ORDER==MAX_FOUND_POLY_ORDER)
+                    {
+                        if (mintermsused>termsused)
+                        {
+                            mintermsused=termsused;
+                            finalorders=ordersused;
+                            bestnulldim = k;
                         }
                     }
                 }
-                if (termsused<nonzeroterms)
-                {
-                    termsused=nonzeroterms;
-                    ordersused++;
-                    MAX_FOUND_ODE_ORDER=i;
-                }
             }
-            if (ordersused<2L)
+            if (finalorders<2L)
             {
-                //printf("Spurious equation with %ld order term.\n",ordersused);
+                //printf("Spurious equation with %ld order term.\n",finalorders);
                 nulldimflag=0;
                 fmpz_mat_clear(N);
             }
-            else if (termsused<ordersused+1L)
+            else if (mintermsused<finalorders+1L)
             {
-                //printf("Polynomial coefficients only have one term each.\n",ordersused);
+                //printf("Polynomial coefficients only have one term each.\n");
                 nulldimflag=0;
                 fmpz_mat_clear(N);
             }
-            else if (MAX_FOUND_ODE_ORDER<ODE_ORDER)
+            else if (MAX_ODE_ORDER<ODE_ORDER)
             {
                 //printf("Spurious solution came from taking a lot of derivatives, then found lower order ODE.\n");
                 nulldimflag=0;
@@ -275,7 +301,7 @@ int main()
         */
         printf("\n***********************\n");
         printf("***Found a solution!***\n");
-        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*termsused/(NUM_COEFFS-NUM_CHECKS)));
+        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-NUM_CHECKS)));
         printf("***********************\n\n");
         sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
         fouteqs = fopen(fouteqsname,"w");
@@ -291,26 +317,27 @@ int main()
         
         
         i=0L;
-        while (fmpz_cmp_ui(fmpz_mat_entry(N,i,0),0L)!=0L)
+        while (fmpz_cmp_ui(fmpz_mat_entry(N,i,bestnulldim),0L)!=0L)
         {
             i++;
         }
-        fmpz_set(coeff,fmpz_mat_entry(N,i,0));
+        fmpz_set(coeff,fmpz_mat_entry(N,i,bestnulldim));
         for (j=i+1L;j<COLUMNS;j++)
         {
-            if (fmpz_cmp_ui(fmpz_mat_entry(N,j,0),0L)!=0L)
+            if (fmpz_cmp_ui(fmpz_mat_entry(N,j,bestnulldim),0L)!=0L)
             {
-                fmpz_gcd(coeff,coeff,fmpz_mat_entry(N,j,0));
+                fmpz_gcd(coeff,coeff,fmpz_mat_entry(N,j,bestnulldim));
             }
         } //printf("GCD = "); fmpz_print(coeff); printf("\n");
         firstorder=0L;
         fprintf(fouteqs,"ODE%s := ",finname);
+            //for (n=0;n<nulldim;n++){firstorder=0L; //For showing all solutions, uncomment and change all bestnulldim to n
         for (i=0L;i<ODE_ORDER+1L;i++)
         {
             fmpz_set_ui(temp,0L);
             for (j=0L;j<MAX_POLY_ORDER+1L;j++)
             {
-                fmpz_abs(temp2,fmpz_mat_entry(N,(i+j*(ODE_ORDER+1L)),0));
+                fmpz_abs(temp2,fmpz_mat_entry(N,(i+j*(ODE_ORDER+1L)),bestnulldim));
                 fmpz_add(temp,temp,temp2);
             }
             if (fmpz_cmp_ui(temp,0L)>0L)
@@ -326,15 +353,15 @@ int main()
                 firstterm=0L;
                 for (k=0L;k<MAX_POLY_ORDER+1L;k++)
                 {
-                    if (fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),0),0L)!=0L)
+                    if (fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),0L)!=0L)
                     {
                         firstterm++;
-                        if ((firstterm>1L)&&(fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),0),0L)>0L))
+                        if ((firstterm>1L)&&(fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),0L)>0L))
                         {
                             fprintf(fouteqs,"+");
                             printf("+");
                         }
-                        fmpz_divexact(temp,fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),0),coeff);
+                        fmpz_divexact(temp,fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),coeff);
                         fmpz_fprint(fouteqs,temp);
                         fmpz_fprint(stdout, temp);
                         if (k>0L)
@@ -380,7 +407,7 @@ int main()
         }
         fprintf(fouteqs,":\n");
         printf("=0\n");
-        
+            //} printf("Total nullspace dimension = %ld",nulldim); //for showing all solutions, uncomment
         fmpz_mat_clear(N);
         fclose(fouteqs);
     }

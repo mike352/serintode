@@ -16,7 +16,7 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/catalan.txt"; /*File name of data*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
@@ -29,7 +29,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,n,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER,MIN_MAX_FOUND_POLY_ORDER,mintermsused,bestnulldim,firstterm,firstorder;
+    long i,j,k,n, nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,MAX_FOUND_ODE_ORDER,MIN_MAX_FOUND_POLY_ORDER, mintermsused,bestnulldim,firstterm,firstorder, finalorders;
     long nulldim=0L;
     char input_string[MAX_LINE_LENGTH+1L];
     mpz_t *S, *M, *N, temp, temp2,coeff;
@@ -229,7 +229,9 @@ int main()
         {
             //Check that the number of orders is not 1
             mintermsused=0;
-            MIN_MAX_FOUND_POLY_ORDER=MAX_POLY_ORDER;
+            MIN_MAX_FOUND_POLY_ORDER=MAX_POLY_ORDER+1L;
+            bestnulldim=0L;
+            finalorders=0L;
             for (k=0;k<nulldim;k++)
             {
                 ordersused=0L;
@@ -257,23 +259,29 @@ int main()
                         MAX_FOUND_ODE_ORDER=i;
                     }
                 }
-                if (MIN_MAX_FOUND_POLY_ORDER>MAX_FOUND_POLY_ORDER)
+                if (MAX_FOUND_ODE_ORDER==ODE_ORDER)
                 {
-                    MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
-                    bestnulldim = k;
-                }
-                else if (MIN_MAX_FOUND_POLY_ORDER==MAX_FOUND_POLY_ORDER)
-                {
-                    if (mintermsused>termsused)
-                    {
+                    if (MIN_MAX_FOUND_POLY_ORDER>MAX_FOUND_POLY_ORDER)
+                    {//printf("maxpolyorder=%ld, termsused=%ld, ordersused=%ld, k=%ld\n",MAX_FOUND_POLY_ORDER,termsused,ordersused,k);
+                        MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
                         mintermsused=termsused;
+                        finalorders=ordersused;
                         bestnulldim = k;
+                    }
+                    else if (MIN_MAX_FOUND_POLY_ORDER==MAX_FOUND_POLY_ORDER)
+                    {//printf("    maxpolyorder=%ld, termsused=%ld, ordersused=%ld, k=%ld",MAX_FOUND_POLY_ORDER,termsused,ordersused,k);
+                        if (mintermsused>termsused)
+                        {
+                            mintermsused=termsused;
+                            finalorders=ordersused;
+                            bestnulldim = k;
+                        }
                     }
                 }
             }
-            if (ordersused<2L)
+            if (finalorders<2L)
             {
-                //printf("Spurious equation with %ld order term.\n",ordersused);
+                //printf("Spurious equation with %ld order term.\n",finalorders);
                 nulldimflag=0;
                 for (i=0L;i<COLUMNS*nulldim;i++)
                 {
@@ -281,9 +289,9 @@ int main()
                 }
                 free(N);
             }
-            else if (termsused<ordersused+1L)
+            else if (mintermsused<finalorders+1L)
             {
-                //printf("Polynomial coefficients only have one term each.\n",ordersused);
+                //printf("Polynomial coefficients only have one term each.\n");
                 nulldimflag=0;
                 for (i=0L;i<COLUMNS*nulldim;i++)
                 {
@@ -291,7 +299,7 @@ int main()
                 }
                 free(N);
             }
-            else if (MAX_FOUND_ODE_ORDER<ODE_ORDER)
+            else if (MAX_ODE_ORDER<ODE_ORDER)
             {
                 //printf("Spurious solution came from taking a lot of derivatives, then found lower order ODE.\n");
                 nulldimflag=0;
@@ -351,7 +359,7 @@ int main()
         */
         printf("\n***********************\n");
         printf("***Found a solution!***\n");
-        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*termsused/(NUM_COEFFS-NUM_CHECKS)));
+        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-NUM_CHECKS)));
         printf("***********************\n\n");
         
         sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
@@ -373,6 +381,7 @@ int main()
         //fprintf(foutsum,"%s: %ld, %ld, ",finname,NUM_COEFFS,ODE_ORDER);
         firstorder=0L;
         fprintf(fouteqs,"ODE%s := ",finname);
+            //for (n=0;n<nulldim;n++){firstorder=0L; //For showing all solutions, uncomment and change all bestnulldim to n
         for (i=0L;i<ODE_ORDER+1L;i++)
         {
             mpz_set_ui(temp,0L);
@@ -447,7 +456,7 @@ int main()
         }
         fprintf(fouteqs,":\n");
         printf("=0\n");
-        
+            //} printf("Total nullspace dimension = %ld",nulldim); //For showing all solutions, uncomment
         //fprintf(foutsum,"%ld, %ld\n",MAX_FOUND_ORDER,NUM_COEFFS-NUM_CHECKS-(ODE_ORDER+1L)*(MAX_FOUND_ORDER+1L));
         
         for (i=0L;i<COLUMNS*nulldim;i++)

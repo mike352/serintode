@@ -2,6 +2,8 @@ serintode is a C program for searching for ODEs which annihilate an integer seri
 
 There are two programs based on two different libraries, IML and flint. The IML version has linear and algebraic ODE search versions. At the moment the flint version only has a linear ODE version. 
 
+Both versions rely on the construction of a matrix nullspace, the solution being one of the null vectors (all are solutions). Due to the way each library constructs the nullspace, the output from each program can be different. Both outputs give the corred ODE. The flint solutions may have smaller polynomial coefficient orders, although I haven't tested the differences extensively enough to say that's always or even usually the case.
+
 The program automatically determines the number of coefficients in a file and searches for ODEs of increasing order according to the number of coefficients and the number of checks required. It outputs the result both to the screen as well as a file created if a solution is found, using the input file name as the start of the file.
 
 Input files should have one coefficient per line.

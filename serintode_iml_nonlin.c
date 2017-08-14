@@ -40,7 +40,7 @@ int main()
 {
     char *finname = "tests/catalan.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=2L; 
+    long const MIN_ODE_ORDER=1L; 
     long const MIN_DEPTH=1L;
     long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
@@ -52,7 +52,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms,ordersused,termsused,MAX_FOUND_POLY_ORDER,firstterm;
+    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,firstterm, firstorder;
     long nulldim=0L;
     long **orderexp, *s, arrindex=0L;
     char input_string[MAX_LINE_LENGTH+1L];
@@ -637,7 +637,7 @@ int main()
         fprintf(fouteqs,"ODE%s := ",finname);
         for (n=0L;n<nulldim;n++)
         {
-            nonzeroterms=0L;
+            firstorder=0L;
             for (i=0L;i<numterms;i++)
             {
                 mpz_set_ui(temp,0L);
@@ -648,8 +648,8 @@ int main()
                 }
                 if (mpz_cmp_ui(temp,0L)>0L)
                 {
-                    nonzeroterms++;
-                    if (nonzeroterms>1L)
+                    firstorder++;
+                    if (firstorder>1L)
                     {
                         fprintf(fouteqs,"+");
                         printf("+");
