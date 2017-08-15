@@ -18,8 +18,8 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/new_b280166.txt"; /*File name of data*/
-    long const NUM_CHECKS=10L; /*Should be greater than 0*/
+    char *finname = "tests/catalan.txt"; /*File name of data*/
+    long const NUM_CHECKS=2L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=300; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
@@ -56,6 +56,7 @@ int main()
     fmpz_init(coeff);
     fmpz_mat_init(S,1,MAX_COEFFS);  
     NUM_COEFFS=0L;
+    nonzeroterms=0L;
     while (NUM_COEFFS<MAX_COEFFS)
     {
         fgcheck = fgets(input_string,MAX_LINE_LENGTH,fin);
@@ -76,8 +77,20 @@ int main()
         else
         {
             fmpz_set_str(temp,input_string,10);
-            fmpz_set(fmpz_mat_entry(S,0,NUM_COEFFS),temp);
-            NUM_COEFFS++;
+            if (nonzeroterms==0L)
+            {
+                if (fmpz_cmp_ui(temp,0)!=0)
+                {
+                    nonzeroterms++;
+                    fmpz_set(fmpz_mat_entry(S,0,NUM_COEFFS),temp);
+                    NUM_COEFFS++;
+                }
+            }
+            else
+            {
+                fmpz_set(fmpz_mat_entry(S,0,NUM_COEFFS),temp);
+                NUM_COEFFS++;
+            }
         }
     }
     fclose(fin); 
@@ -93,11 +106,11 @@ int main()
     
     fmpz_mat_init(M,MAX_COEFFS,MAX_COEFFS);
     printf("File %s:\n",finname);
-    MAX_ODE_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/2L)-1L;
+    MAX_ODE_ORDER=floor((double) (NUM_COEFFS-NUM_CHECKS)/2L)-1L;
     for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
     {
         ODE_ORDER=n; //printf("Starting ODE order %ld\n",ODE_ORDER);
-        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/(ODE_ORDER+1L))-1L;
+        MAX_POLY_ORDER=floor((double) (NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/(ODE_ORDER+1L))-1L;
         if (MAX_POLY_ORDER == 0L)
         {
             break;
@@ -118,9 +131,8 @@ int main()
                 {
                     fmpz_fac_ui(temp,j+k-i); //fmpz_print(temp); printf(" ");
                     fmpz_fac_ui(temp2,k-i); //fmpz_print(temp2); printf(" ");
-                    fmpz_divexact(coeff,temp,temp2);  //fmpz_print(coeff); printf(" "); //coeff = (j+k-i)!/(k-i)!
-                    fmpz_mul(temp,coeff,fmpz_mat_entry(S,0,j+k-i));  //fmpz_print(temp); printf("\n"); //printf("Check i=%ld, j=%ld, k=%ld, index=%ld, index=%ld, max=%ld  ",i,j,k,j+k-i,k*COLUMNS+i*(ODE_ORDER+1)+j,ROWS*COLUMNS);
-                    //mpz_out_str(NULL,10,coeff); printf("\n");
+                    fmpz_divexact(coeff,temp,temp2);  //coeff = (j+k-i)!/(k-i)!
+                    fmpz_mul(temp,coeff,fmpz_mat_entry(S,0,j+k-i)); 
                     fmpz_set(fmpz_mat_entry(M,k,i*(ODE_ORDER+1L)+j),temp);
                 }
             }
@@ -309,7 +321,6 @@ int main()
         {
             printf("\nError: Could not open equations output file %s. %s\n",fouteqsname,strerror(errno));
             fclose(fin);
-            //fclose(foutsum);
             fmpz_mat_clear(N);
             exit(EXIT_FAILURE);
         }

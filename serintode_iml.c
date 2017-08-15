@@ -16,8 +16,8 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/new_b280166.txt"; /*File name of data*/
-    long const NUM_CHECKS=10L; /*Should be greater than 0*/
+    char *finname = "tests/catalan.txt"; /*File name of data*/
+    long const NUM_CHECKS=6L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
@@ -42,35 +42,12 @@ int main()
     
     mpz_inits(temp,temp2,coeff,NULL);
     
-    /*
-    for (i=0L;i<MAX_COEFFS;i++)
-    {
-        mpz_init(S[i]);
-    }
-    for (i=0L;i<MAX_COEFFS*MAX_COEFFS;i++)
-    {
-        mpz_init(M[i]);
-    }
-    */
-    
     fin = fopen(finname,"r");
     if (fin==NULL)
     {
         printf("\nError: Could not open input file %s. %s\n",finname,strerror(errno));
         exit(EXIT_FAILURE);
     }
-    
-    /*
-    sprintf(foutsumname,"%s_summary_%ld-checks.txt",finname,NUM_CHECKS);
-    foutsum = fopen(foutsumname,"w");
-    if (foutsum==NULL)
-    {
-        printf("\nError: Could not open summary output file %s. %s\n",foutsumname,strerror(errno));
-        fclose(fin);
-        exit(EXIT_FAILURE);
-    }
-    setvbuf(foutsum,NULL,_IOLBF,32);
-    */
     
     S = (mpz_t*) malloc(MAX_COEFFS*sizeof(mpz_t));
     M = (mpz_t*) malloc(MAX_COEFFS*MAX_COEFFS*sizeof(mpz_t)); //Maximum number needed below
@@ -85,6 +62,7 @@ int main()
     }
     
     NUM_COEFFS=0L;
+    nonzeroterms=0L;
     while (NUM_COEFFS<MAX_COEFFS)
     {
         fgcheck = fgets(input_string,MAX_LINE_LENGTH,fin);
@@ -104,8 +82,21 @@ int main()
         }   
         else
         {
-            mpz_init_set_str(S[NUM_COEFFS],input_string,10);
-            NUM_COEFFS++;
+            if (nonzeroterms==0L)
+            {
+                mpz_set_str(temp,input_string,10);
+                if (mpz_cmp_ui(temp,0)!=0)
+                {
+                    nonzeroterms++;
+                    mpz_init_set(S[NUM_COEFFS],temp);
+                    NUM_COEFFS++;
+                }
+            }
+            else
+            {
+                mpz_init_set_str(S[NUM_COEFFS],input_string,10);
+                NUM_COEFFS++;
+            }
         }
     }
     fclose(fin);
@@ -120,11 +111,11 @@ int main()
     */
     
     printf("File %s:\n",finname);
-    MAX_ODE_ORDER=floor((NUM_COEFFS-NUM_CHECKS)/2L)-1L;
+    MAX_ODE_ORDER=floor((double) (NUM_COEFFS-NUM_CHECKS)/2L)-1L;
     for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
     {
         ODE_ORDER=n; //printf("Starting ODE order %ld\n",ODE_ORDER);
-        MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/(ODE_ORDER+1L))-1L;
+        MAX_POLY_ORDER=floor((double) (NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/(ODE_ORDER+1L))-1L;
         if (MAX_POLY_ORDER == 0L)
         {
             break;
@@ -153,8 +144,7 @@ int main()
                     mpz_fac_ui(temp,j+k-i);
                     mpz_fac_ui(temp2,k-i);
                     mpz_divexact(coeff,temp,temp2); //coeff = (j+k-i)!/(k-i)!
-                    mpz_mul(temp,coeff,S[j+k-i]); //printf("Check i=%ld, j=%ld, k=%ld, index=%ld, index=%ld, max=%ld  ",i,j,k,j+k-i,k*COLUMNS+i*(ODE_ORDER+1)+j,ROWS*COLUMNS);
-                    //mpz_out_str(NULL,10,coeff); printf("\n");
+                    mpz_mul(temp,coeff,S[j+k-i]); 
                     mpz_set(M[k*COLUMNS+i*(ODE_ORDER+1L)+j],temp);
                 }
             }
@@ -457,7 +447,6 @@ int main()
         fprintf(fouteqs,":\n");
         printf("=0\n");
             //} printf("Total nullspace dimension = %ld",nulldim); //For showing all solutions, uncomment
-        //fprintf(foutsum,"%ld, %ld\n",MAX_FOUND_ORDER,NUM_COEFFS-NUM_CHECKS-(ODE_ORDER+1L)*(MAX_FOUND_ORDER+1L));
         
         for (i=0L;i<COLUMNS*nulldim;i++)
         {

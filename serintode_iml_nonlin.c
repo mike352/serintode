@@ -89,6 +89,7 @@ int main()
     }
     
     NUM_COEFFS=0L;
+    nonzeroterms=0L;
     while (NUM_COEFFS<MAX_COEFFS)
     {
         fgcheck = fgets(input_string,MAX_LINE_LENGTH,fin);
@@ -110,8 +111,21 @@ int main()
         }   
         else
         {
-            mpz_init_set_str(I[NUM_COEFFS],input_string,10);
-            NUM_COEFFS++;
+            if (nonzeroterms==0L)
+            {
+                mpz_set_str(temp,input_string,10);
+                if (mpz_cmp_ui(temp,0)!=0)
+                {
+                    nonzeroterms++;
+                    mpz_init_set(I[NUM_COEFFS],temp);
+                    NUM_COEFFS++;
+                }
+            }
+            else
+            {
+                mpz_init_set_str(I[NUM_COEFFS],input_string,10);
+                NUM_COEFFS++;
+            }
         }
     }
     fclose(fin); 
@@ -178,7 +192,7 @@ int main()
         printf("\n");
     }*/
     
-    //MAX_ODE_ORDER=floor((NUM_COEFFS-NUM_CHECKS-2L)/3L);
+    //MAX_ODE_ORDER=floor((double) (NUM_COEFFS-NUM_CHECKS-2L)/3L);
     for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
     {
         ODE_ORDER=n;
@@ -255,8 +269,7 @@ int main()
             mpz_fac_ui(temp2,p);
             mpz_divexact(temp,temp,temp2);
             numterms=mpz_get_ui(temp)-1L; //Equals (n+p)!/(n!p!) Need one less than this
-            
-            MAX_POLY_ORDER=floor((NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/numterms)-1L;
+            MAX_POLY_ORDER=floor((double) (NUM_COEFFS-NUM_CHECKS-ODE_ORDER)/numterms)-1L;
             if (MAX_POLY_ORDER<1L)
             {
                 break;
@@ -312,7 +325,6 @@ int main()
             arrindex=0L;
             
             combs(orderexp,s,ODE_ORDER+1L,p,0,&arrindex); 
-            //printf("order=%ld depth=%ld numterms=%ld coeffs=%ld\n",ODE_ORDER,p,arrindex,NUM_COEFFS-NUM_CHECKS-ODE_ORDER);
 
             for (i=0L;i<numterms;i++)
             {
@@ -370,17 +382,6 @@ int main()
                     }
                 }
             }
-            
-            /*
-            for (i=0L;i<numterms;i++)
-            {
-                printf("S[%ld]: ",i);
-                for (j=0L;j<NUM_COEFFS-i;j++)
-                {
-                    gmp_printf("%Zd ",S[i][j]);
-                }
-                printf("\n");
-            }*/
             
             COLUMNS=numterms*(MAX_POLY_ORDER+1L);
             ROWS=COLUMNS+NUM_CHECKS; 
@@ -633,7 +634,6 @@ int main()
             exit(EXIT_FAILURE);
         }
         setvbuf(fouteqs,NULL,_IOLBF,32);
-        //fprintf(foutsum,"%s: %ld, %ld, ",finname,NUM_COEFFS,ODE_ORDER);
         fprintf(fouteqs,"ODE%s := ",finname);
         for (n=0L;n<nulldim;n++)
         {
@@ -712,8 +712,6 @@ int main()
             printf("=0\n");
             printf("Confidence level: %02ld%%\n",(long) floor((double) 100L-100L*nonzeroterms/(NUM_COEFFS-NUM_CHECKS-ODE_ORDER)));
         }
-        
-        //fprintf(foutsum,"%ld, %ld\n",MAX_FOUND_ORDER,NUM_COEFFS-NUM_CHECKS-(ODE_ORDER+1L)*(MAX_FOUND_ORDER+1L));
         
         for (i=0L;i<COLUMNS*nulldim;i++)
         {
