@@ -478,7 +478,7 @@ int main()
                 else
                 {
                     fprintf(fouteqs,"*y(x)");
-                    printf("*y(x)");
+                    printf("*y");
                 }
             }
         }
