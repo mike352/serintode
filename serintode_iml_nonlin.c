@@ -710,7 +710,7 @@ int main()
             }
             fprintf(fouteqs,":\n");
             printf("=0\n");
-            printf("Confidence level: %02ld%%\n",(long) floor((double) 100L-100L*nonzeroterms/(NUM_COEFFS-NUM_CHECKS-ODE_ORDER)));
+            printf("Confidence level: %02ld%%\n",(long) floor((double) 100L-100L*nonzeroterms/(NUM_COEFFS-ODE_ORDER)));
         }
         
         for (i=0L;i<COLUMNS*nulldim;i++)

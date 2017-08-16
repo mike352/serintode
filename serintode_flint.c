@@ -313,7 +313,7 @@ int main()
         */
         printf("\n***********************\n");
         printf("***Found a solution!***\n");
-        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-NUM_CHECKS-ODE_ORDER)));
+        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-ODE_ORDER)));
         printf("***********************\n\n");
         sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
         fouteqs = fopen(fouteqsname,"w");

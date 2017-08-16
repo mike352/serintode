@@ -16,7 +16,7 @@
 int main()
 {
     time_t start,end;
-    char *finname = "tests/catalan.txt"; /*File name of data*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
     long const NUM_CHECKS=6L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MAX_COEFFS=400; /*Should be checked for very large sequences*/
@@ -349,7 +349,7 @@ int main()
         */
         printf("\n***********************\n");
         printf("***Found a solution!***\n");
-        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-NUM_CHECKS-ODE_ORDER)));
+        printf("*Confidence level: %02ld%%*\n",(long) floor((double) 100L-100L*(ODE_ORDER+1L)*(MIN_MAX_FOUND_POLY_ORDER+1L)/(NUM_COEFFS-ODE_ORDER)));
         printf("***********************\n\n");
         
         sprintf(fouteqsname,"%s_solution_%ld-checks.txt",finname,NUM_CHECKS);
@@ -368,7 +368,6 @@ int main()
             exit(EXIT_FAILURE);
         }
         setvbuf(fouteqs,NULL,_IOLBF,32);
-        //fprintf(foutsum,"%s: %ld, %ld, ",finname,NUM_COEFFS,ODE_ORDER);
         firstorder=0L;
         fprintf(fouteqs,"ODE%s := ",finname);
             //for (n=0;n<nulldim;n++){firstorder=0L; //For showing all solutions, uncomment and change all bestnulldim to n
@@ -400,20 +399,59 @@ int main()
                         {
                             fprintf(fouteqs,"+");
                             printf("+");
+                            if (mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim],1L)!=0L)
+                            {
+                                gmp_fprintf(fouteqs, "%Zd*", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                                gmp_fprintf(stdout, "%Zd*", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                            }
                         }
-                        gmp_fprintf (fouteqs, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
-                        gmp_fprintf (stdout, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                        else if ((firstterm>1L)&&(mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim],0L)<0L))
+                        {
+                            mpz_abs(temp,N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                            if (mpz_cmp_ui(temp,1L)!=0L)
+                            {
+                                gmp_fprintf(fouteqs, "%Zd*", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                                gmp_fprintf(stdout, "%Zd*", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                            }
+                            else
+                            {
+                                fprintf(fouteqs,"-");
+                                printf("-");
+                            }
+                        }
+                        else //first term
+                        {
+                            if (k>0)
+                            {
+                                mpz_abs(temp,N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                                if (mpz_cmp_ui(temp,1L)!=0L)
+                                {
+                                    gmp_fprintf(fouteqs, "%Zd*", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                                    gmp_fprintf(stdout, "%Zd*", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                                }
+                                else if (mpz_cmp_ui(N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim],0L)<0L)
+                                {
+                                    fprintf(fouteqs,"-");
+                                    printf("-");
+                                }
+                            }
+                            else
+                            {
+                                gmp_fprintf(fouteqs, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                                gmp_fprintf(stdout, "%Zd", N[(i+k*(ODE_ORDER+1L))*nulldim+bestnulldim]);
+                            }
+                        }
                         if (k>0L)
                         {
                             if (k==1)
                             {
-                                fprintf(fouteqs,"*x");
-                                printf("*x");
+                                fprintf(fouteqs,"x");
+                                printf("x");
                             }
                             else
                             {
-                                fprintf(fouteqs,"*x^%ld",k);
-                                printf("*x^%ld",k);
+                                fprintf(fouteqs,"x^%ld",k);
+                                printf("x^%ld",k);
                             }
                         }
                         if (MAX_FOUND_ORDER<k)
