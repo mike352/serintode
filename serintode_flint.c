@@ -370,21 +370,62 @@ int main()
                         {
                             fprintf(fouteqs,"+");
                             printf("+");
+                            fmpz_divexact(temp,fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),coeff);
+                            if (fmpz_cmp_ui(temp,1L)!=0L)
+                            {
+                                fmpz_fprint(fouteqs,temp); fprintf(fouteqs,"*");
+                                fmpz_fprint(stdout, temp); fprintf(stdout,"*");
+                            }
                         }
-                        fmpz_divexact(temp,fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),coeff);
-                        fmpz_fprint(fouteqs,temp);
-                        fmpz_fprint(stdout, temp);
+                        else if ((firstterm>1L)&&(fmpz_cmp_ui(fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),0L)<0L))
+                        {
+                            fmpz_divexact(temp,fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),coeff);
+                            fmpz_abs(temp2,temp);
+                            if (fmpz_cmp_ui(temp2,1L)!=0L)
+                            {
+                                fmpz_fprint(fouteqs,temp); fprintf(fouteqs,"*");
+                                fmpz_fprint(stdout, temp); fprintf(stdout,"*");
+                            }
+                            else
+                            {
+                                fprintf(fouteqs,"-");
+                                printf("-");
+                            }
+                        }
+                        else
+                        {
+                            fmpz_divexact(temp,fmpz_mat_entry(N,(i+k*(ODE_ORDER+1L)),bestnulldim),coeff);
+                            if (k>0)
+                            {
+                                fmpz_abs(temp2,temp);
+                                if (fmpz_cmp_ui(temp2,1L)!=0L)
+                                {
+                                    fmpz_fprint(fouteqs,temp); fprintf(fouteqs,"*");
+                                    fmpz_fprint(stdout, temp); fprintf(stdout,"*");
+                                }
+                                else if (fmpz_cmp_ui(temp,0L)<0L)
+                                {
+                                    fprintf(fouteqs,"-");
+                                    printf("-");
+                                }
+                            }
+                            else
+                            {
+                                fmpz_fprint(fouteqs,temp);
+                                fmpz_fprint(stdout, temp);
+                            }
+                        }
                         if (k>0L)
                         {
                             if (k==1)
                             {
-                                fprintf(fouteqs,"*x");
-                                printf("*x");
+                                fprintf(fouteqs,"x");
+                                printf("x");
                             }
                             else
                             {
-                                fprintf(fouteqs,"*x^%ld",k);
-                                printf("*x^%ld",k);
+                                fprintf(fouteqs,"x^%ld",k);
+                                printf("x^%ld",k);
                             }
                         }
                         if (MAX_FOUND_ORDER<k)
@@ -411,7 +452,7 @@ int main()
                 else
                 {
                     fprintf(fouteqs,"*y(x)");
-                    printf("*y(x)");
+                    printf("*y");
                 }
             }
         }
