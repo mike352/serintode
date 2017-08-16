@@ -634,7 +634,7 @@ int main()
             exit(EXIT_FAILURE);
         }
         setvbuf(fouteqs,NULL,_IOLBF,32);
-        fprintf(fouteqs,"ODE%s := ",finname);
+        fprintf(fouteqs,"#ODE candidate for %s\n",finname);
         for (n=0L;n<nulldim;n++)
         {
             firstorder=0L;
@@ -666,20 +666,59 @@ int main()
                             {
                                 fprintf(fouteqs,"+");
                                 printf("+");
+                                if (mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],1L)!=0L)
+                                {
+                                    gmp_fprintf (fouteqs, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf (stdout, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                                }
                             }
-                            gmp_fprintf (fouteqs, "%Zd", N[(i+k*numterms)*nulldim+n]);
-                            gmp_fprintf (stdout, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                            else if ((firstterm>1L)&&(mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)<0L))
+                            {
+                                mpz_abs(temp,N[(i+k*numterms)*nulldim+n]);
+                                if (mpz_cmp_ui(temp,1L)!=0L)
+                                {
+                                    gmp_fprintf(fouteqs, "%Zd*", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf(stdout, "%Zd*", N[(i+k*numterms)*nulldim+n]);
+                                }
+                                else
+                                {
+                                    fprintf(fouteqs,"-");
+                                    printf("-");
+                                }
+                            }
+                            else //first term
+                            {
+                                if (k>0)
+                                {
+                                    mpz_abs(temp,N[(i+k*numterms)*nulldim+n]);
+                                    if (mpz_cmp_ui(temp,1L)!=0L)
+                                    {
+                                        gmp_fprintf(fouteqs, "%Zd*", N[(i+k*numterms)*nulldim+n]);
+                                        gmp_fprintf(stdout, "%Zd*", N[(i+k*numterms)*nulldim+n]);
+                                    }
+                                    else if (mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)<0L)
+                                    {
+                                        fprintf(fouteqs,"-");
+                                        printf("-");
+                                    }
+                                }
+                                else
+                                {
+                                    gmp_fprintf(fouteqs, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf(stdout, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                                }
+                            }
                             if (k>0L)
                             {
                                 if (k==1)
                                 {
-                                    fprintf(fouteqs,"*x");
-                                    printf("*x");
+                                    fprintf(fouteqs,"x");
+                                    printf("x");
                                 }
                                 else
                                 {
-                                    fprintf(fouteqs,"*x^%ld",k);
-                                    printf("*x^%ld",k);
+                                    fprintf(fouteqs,"x^%ld",k);
+                                    printf("x^%ld",k);
                                 }
                             }
                             if (MAX_FOUND_ORDER<k)
@@ -696,13 +735,29 @@ int main()
                         {
                             if (j==0L)
                             {
-                                fprintf(fouteqs,"*(y(x))^%ld",orderexp[i][j]);
-                                printf("*y^%ld",orderexp[i][j]);
+                                if (orderexp[i][j]!=1L)
+                                {
+                                    fprintf(fouteqs,"*(y(x))^%ld",orderexp[i][j]);
+                                    printf("*y^%ld",orderexp[i][j]);
+                                }
+                                else
+                                {
+                                    fprintf(fouteqs,"*y(x)");
+                                    printf("*y");
+                                }
                             }
-                            else
+                            else if (j==1L)
                             {
-                                fprintf(fouteqs,"*(diff(y(x),x$%ld))^%ld",j,orderexp[i][j]);
-                                printf("*(Dx^%ld)^%ld",j,orderexp[i][j]);
+                                if (orderexp[i][j]!=1L)
+                                {
+                                    fprintf(fouteqs,"*(diff(y(x),x))^%ld",orderexp[i][j]);
+                                    printf("*(Dx)^%ld",orderexp[i][j]);
+                                }
+                                else
+                                {
+                                    fprintf(fouteqs,"*diff(y(x),x)");
+                                    printf("*Dx");
+                                }
                             }
                         }
                     }
