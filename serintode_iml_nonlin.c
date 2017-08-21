@@ -586,7 +586,7 @@ int main()
                         }
                         else if (mintermsused<finalorders+1L)
                         {
-                            //printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
+                            printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
                             //nulldimflag=1;
                         }
                         
