@@ -775,8 +775,16 @@ int main()
                             }
                             else
                             {
-                                fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
-                                printf("*Dx^%ld",i);
+                                if (orderexp[i][j]!=1L)
+                                {
+                                    fprintf(fouteqs,"*(diff(y(x),x$%ld))^%ld",j,orderexp[i][j]);
+                                    printf("*(Dx^%ld)^%ld",j,orderexp[i][j]);
+                                }
+                                else
+                                {
+                                    fprintf(fouteqs,"*diff(y(x),x$%ld)",j);
+                                    printf("*Dx^%ld",j);
+                                }
                             }
                         }
                     }
