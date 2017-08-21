@@ -37,7 +37,6 @@ int main()
     char *fgcheck, nulldimflag=0;
 
     setvbuf(stdout,NULL,_IONBF,0);
-    
     time(&start);
     
     mpz_inits(temp,temp2,coeff,NULL);

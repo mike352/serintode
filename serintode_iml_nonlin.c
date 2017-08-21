@@ -42,6 +42,7 @@ int main()
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MIN_DEPTH=1L;
+    long const MAX_DEPTH=1L; //Choosing 1 equals linear
     long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
@@ -52,7 +53,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,depthmax,nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,firstterm, firstorder;
+    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,MAX_DEPTH_POSS,nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,firstterm, firstorder;
     long nulldim=0L;
     long **orderexp, *s, arrindex=0L;
     char input_string[MAX_LINE_LENGTH+1L];
@@ -196,23 +197,27 @@ int main()
     for (n=MIN_ODE_ORDER;n<MAX_ODE_ORDER+1L;n++)
     {
         ODE_ORDER=n;
-        for (depthmax=1;depthmax<=maxnumterms;depthmax++)
+        for (MAX_DEPTH_POSS=1;MAX_DEPTH_POSS<=maxnumterms;MAX_DEPTH_POSS++)
         {
             //Computing the number (n+d)!/(n!d!). Need one less than this. n is order d is depth
-            mpz_fac_ui(temp,ODE_ORDER+1L+depthmax);
+            mpz_fac_ui(temp,ODE_ORDER+1L+MAX_DEPTH_POSS);
             mpz_fac_ui(temp2,ODE_ORDER+1L);
             mpz_divexact(temp,temp,temp2);
-            mpz_fac_ui(temp2,depthmax);
+            mpz_fac_ui(temp2,MAX_DEPTH_POSS);
             mpz_divexact(temp,temp,temp2);
             if ((long) mpz_get_ui(temp)>maxnumterms)
             {
-                depthmax--;
+                MAX_DEPTH_POSS--;
                 break;
             }
             else
             {
                 ordermaxnumterms=mpz_get_ui(temp);
             }
+        }
+        if (MAX_DEPTH_POSS>MAX_DEPTH)
+        {
+            MAX_DEPTH_POSS=MAX_DEPTH;
         }
         
         S = (mpz_t **) malloc(ordermaxnumterms*sizeof(mpz_t *));
@@ -261,7 +266,7 @@ int main()
         }
 
         //depthmax=1; //Linear ODE
-        for (p=MIN_DEPTH;p<depthmax+1L;p++)
+        for (p=MIN_DEPTH;p<MAX_DEPTH_POSS+1L;p++)
         {
             mpz_fac_ui(temp,ODE_ORDER+1L+p);
             mpz_fac_ui(temp2,ODE_ORDER+1L);
@@ -325,6 +330,15 @@ int main()
             arrindex=0L;
             
             combs(orderexp,s,ODE_ORDER+1L,p,0,&arrindex); 
+            
+            /*
+            for (i=0L;i<numterms;i++)
+            {
+                for (j=0L;j<ODE_ORDER+1L;j++)
+                {
+                    printf("i=%ld, j=%ld, orderxp[i][j]=%ld\n",i,j,orderexp[i][j]);
+                }
+            }*/
 
             for (i=0L;i<numterms;i++)
             {
@@ -758,6 +772,11 @@ int main()
                                     fprintf(fouteqs,"*diff(y(x),x)");
                                     printf("*Dx");
                                 }
+                            }
+                            else
+                            {
+                                fprintf(fouteqs,"*diff(y(x),x$%ld)",i);
+                                printf("*Dx^%ld",i);
                             }
                         }
                     }
