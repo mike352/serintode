@@ -586,8 +586,11 @@ int main()
                         }
                         else if (mintermsused<finalorders+1L)
                         {
-                            printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
-                            //nulldimflag=1;
+                            if (MIN_MAX_FOUND_DEPTH<2L) //Won't allow constat coeffs for linear ODEs
+                            {
+                                //printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
+                                nulldimflag=0;
+                            }
                         }
                         
                         if (nulldimflag==1)
