@@ -38,12 +38,12 @@ void combs(long **r, long *s, long k, long p, long q, long *arrindex)
 
 int main()
 {
-    char *finname = "tests/catalan.txt"; /*File name of data*/
+    char *finname = "tests/3-colorings.txt"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MIN_DEPTH=1L;
-    long const MAX_DEPTH=1L; //Choosing 1 equals linear
-    long const MAX_COEFFS=1000; /*Should be checked for very large sequences*/
+    long const MAX_DEPTH=10L; //Choosing 1 equals linear
+    long const MAX_COEFFS=40; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
     char fouteqsname[64]; /*Output equations file name*/
@@ -53,7 +53,7 @@ int main()
     long MAX_POLY_ORDER=0L;
     long MAX_FOUND_ORDER=0L;
     long COLUMNS=0L, ROWS=0L;
-    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,MAX_DEPTH_POSS,nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,firstterm, firstorder;
+    long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,MAX_DEPTH_POSS,nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,firstterm, firstorder,mintermsused,MIN_MAX_FOUND_POLY_ORDER,MIN_MAX_FOUND_DEPTH, bestnulldim,finalorders, MAX_FOUND_DEPTH,MAX_FOUND_ODE_ORDER;
     long nulldim=0L;
     long **orderexp, *s, arrindex=0L;
     char input_string[MAX_LINE_LENGTH+1L];
@@ -495,67 +495,120 @@ int main()
             }
             
             if (nulldimflag==1)
-            {
-                for (k=0L;k<nulldim;k++)
-                {
-                    //Check that the number of orders is not 1
-                    ordersused=0L;
-                    termsused=0L;
-                    nonzeroterms=0L;
-                    MAX_FOUND_POLY_ORDER=0L;
-                    for (i=0L;i<numterms;i++)
                     {
-                        for (j=0L;j<MAX_POLY_ORDER+1L;j++)
+                        mintermsused=numterms+1L;
+                        MIN_MAX_FOUND_POLY_ORDER=MAX_POLY_ORDER+1L;
+                        MIN_MAX_FOUND_DEPTH=MAX_DEPTH+1L;
+                        bestnulldim=0L;
+                        finalorders=numterms+1L;
+                        MAX_FOUND_DEPTH=0L;
+                        for (k=0L;k<nulldim;k++)
                         {
-                            if (mpz_cmp_ui(N[(i+j*numterms)*nulldim+k],0L)!=0L)
+                            //Check that the number of orders is not 1
+                            ordersused=0L;
+                            termsused=0L;
+                            nonzeroterms=0L;
+                            MAX_FOUND_POLY_ORDER=0L;
+                            MAX_FOUND_ODE_ORDER=0L;
+                            for (i=0L;i<numterms;i++)
                             {
-                                nonzeroterms++;
-                                if (MAX_FOUND_POLY_ORDER<j)
+                                for (j=0L;j<MAX_POLY_ORDER+1L;j++)
                                 {
-                                    MAX_FOUND_POLY_ORDER=j;
+                                    if (mpz_cmp_ui(N[(i+j*numterms)*nulldim+k],0L)!=0L)
+                                    {
+                                        nonzeroterms++;
+                                        if (MAX_FOUND_POLY_ORDER<j)
+                                        {
+                                            MAX_FOUND_POLY_ORDER=j;
+                                        }
+                                    }
+                                }
+                                if (termsused<nonzeroterms)
+                                {
+                                    termsused=nonzeroterms;
+                                    ordersused++; //Not really order, but numterms
+                                    for (l=0L;l<ODE_ORDER+1L;l++)
+                                    {
+                                        if (orderexp[i][l]!=0)
+                                        {
+                                            if (MAX_FOUND_ODE_ORDER<l)
+                                            {
+                                                MAX_FOUND_ODE_ORDER=l;
+                                            }
+                                            if (MAX_FOUND_DEPTH<orderexp[i][l])
+                                            {
+                                                MAX_FOUND_DEPTH=orderexp[i][l];
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
-                        if (termsused<nonzeroterms)
+                            if (MAX_FOUND_ODE_ORDER==ODE_ORDER)
+                            {
+                                if ((finalorders>ordersused)&&(finalorders>1L))
+                                {
+                                    finalorders=ordersused;
+                                    MIN_MAX_FOUND_DEPTH=MAX_FOUND_DEPTH;
+                                    MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
+                                    mintermsused=termsused;
+                                    bestnulldim = k;
+                                }
+                                else if ((finalorders==ordersused)&&(finalorders>1L))
+                                {
+                                    if (MIN_MAX_FOUND_DEPTH>MAX_FOUND_DEPTH)
+                                    {
+                                        MIN_MAX_FOUND_DEPTH=MAX_FOUND_DEPTH;
+                                        MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
+                                        mintermsused=termsused;
+                                        bestnulldim = k;
+                                    }
+                                    else if (MIN_MAX_FOUND_DEPTH==MAX_FOUND_DEPTH)
+                                    {
+                                        if (MIN_MAX_FOUND_POLY_ORDER>MAX_FOUND_POLY_ORDER)
+                                        {
+                                            MIN_MAX_FOUND_POLY_ORDER=MAX_FOUND_POLY_ORDER;
+                                            mintermsused=termsused;
+                                            bestnulldim = k;
+                                        }
+                                    }
+                                }
+                            }
+                        } //End of k nulldim loop
+                        if (finalorders<2L)
                         {
-                            termsused=nonzeroterms;
-                            ordersused++;
+                            //printf("Spurious equation with %ld order term.\n",ordersused);
+                            nulldimflag=0;
+                        }
+                        else if (MAX_FOUND_ODE_ORDER<ODE_ORDER)
+                        {
+                            //printf("Spurious solution came from taking a lot of derivatives, then found lower order ODE.\n");
+                            nulldimflag=0;
+                        }
+                        else if (mintermsused<finalorders+1L)
+                        {
+                            //printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
+                            //nulldimflag=1;
+                        }
+                        
+                        if (nulldimflag==1)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            for (i=0L;i<COLUMNS*nulldim;i++)
+                            {
+                                mpz_clear(N[i]);
+                            }
+                            free(N);
+                            for (i=0L;i<(numterms+1L);i++)
+                            {
+                                free(orderexp[i]);
+                            }
+                            free(orderexp);
+                            free(s);
                         }
                     }
-                    if (ordersused<2L)
-                    {
-                        printf("Spurious equation with %ld order term.\n",ordersused);
-                        nulldimflag=0;
-                    }
-                    else if (termsused<ordersused+1L)
-                    {
-                        printf("\nWARNING: Polynomial coefficients only have one term each.\n\n");
-                        break;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if (nulldimflag==1)
-                {
-                    break;
-                }
-                else
-                {
-                    for (i=0L;i<COLUMNS*nulldim;i++)
-                    {
-                        mpz_clear(N[i]);
-                    }
-                    free(N);
-                    for (i=0L;i<(numterms+1L);i++)
-                    {
-                        free(orderexp[i]);
-                    }
-                    free(orderexp);
-                    free(s);
-                }
-            }
             else
             {
                 for (i=0L;i<COLUMNS*nulldim;i++)
@@ -649,7 +702,9 @@ int main()
         }
         setvbuf(fouteqs,NULL,_IOLBF,32);
         fprintf(fouteqs,"#ODE candidate for %s\n",finname);
-        for (n=0L;n<nulldim;n++)
+        
+        //for (n=0L;n<nulldim;n++)
+        n=bestnulldim;
         {
             firstorder=0L;
             for (i=0L;i<numterms;i++)
