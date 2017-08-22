@@ -310,7 +310,7 @@ int main()
             if (flook==NULL)
             {
                 printf("No lookup table for order %ld depth %ld. %s\n",ODE_ORDER,p,strerror(errno));
-                printf("Skipping\n");
+                printf("Skipping ...\n");
                 break;
             }
             for (i=0L;i<numterms;i++)
