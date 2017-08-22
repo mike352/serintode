@@ -77,7 +77,7 @@ int main()
         else
         {
             fmpz_set_str(temp,input_string,10);
-            if (nonzeroterms==0L)
+            if (nonzeroterms==0L) //Remove initial zeros
             {
                 if (fmpz_cmp_ui(temp,0)!=0)
                 {

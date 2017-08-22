@@ -52,6 +52,7 @@ Mkfile.old
 dkms.conf
 
 # Test data, old files
+lookuptables/
 oeis/
 serintode_iml_auto_old.c
 tests/
