@@ -15,12 +15,12 @@
 
 int main()
 {
-    char *finname = "tests/Chi5_w.ser"; /*File name of data*/
+    char *finname = "tests/Chi_high.ser"; /*File name of data*/
     long const NUM_CHECKS=10L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=1L; 
+    long const MIN_ODE_ORDER=24L; 
     long const MIN_DEPTH=1L;
     long const MAX_DEPTH=3L; //Choosing 1 equals linear
-    long const MAX_COEFFS=6000; /*Should be checked for very large sequences*/
+    long const MAX_COEFFS=4300; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     char fname[64]; /*Lookup table filename*/
     char fouteqsname[64]; /*Output equations file name*/
@@ -729,8 +729,8 @@ int main()
                                 printf("+");
                                 if (mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],1L)!=0L)
                                 {
-                                    gmp_fprintf (fouteqs, "%Zd", N[(i+k*numterms)*nulldim+n]);
-                                    gmp_fprintf (stdout, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf (fouteqs, "%Zd*", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf (stdout, "%Zd*", N[(i+k*numterms)*nulldim+n]);
                                 }
                             }
                             else if ((firstterm>1L)&&(mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)<0L))

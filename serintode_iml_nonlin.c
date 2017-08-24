@@ -743,8 +743,8 @@ int main()
                                 printf("+");
                                 if (mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],1L)!=0L)
                                 {
-                                    gmp_fprintf (fouteqs, "%Zd", N[(i+k*numterms)*nulldim+n]);
-                                    gmp_fprintf (stdout, "%Zd", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf (fouteqs, "%Zd*", N[(i+k*numterms)*nulldim+n]);
+                                    gmp_fprintf (stdout, "%Zd*", N[(i+k*numterms)*nulldim+n]);
                                 }
                             }
                             else if ((firstterm>1L)&&(mpz_cmp_ui(N[(i+k*numterms)*nulldim+n],0L)<0L))
