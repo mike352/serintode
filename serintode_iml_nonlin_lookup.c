@@ -9,44 +9,20 @@
 #include "iml.h"
 
 
-//Compile: gcc -Wall serintode_iml_nonlin.c -o nonlin.o -liml -lcblas -lgmp -lm
+//Compile: gcc -Wall serintode_iml_nonlin_lookup.c -o lookupnonlin.o -liml -lcblas -lgmp -lm
 //Output file sum: gives the sequence name of found solutions, the number of coefficients, the ODE order, the largest polynomial order, the number of free variables
 //Output file eqs: gives the sequence name of found solutions, plus the Maple input for the ODE
 
-
-//Thanks to Richard Brent from Newcastle University for this function
-void combs(long **r, long *s, long k, long p, long q, long *arrindex)
-{
-    long j, m;
-    if (k <= 0)
-    {
-        for (m=0; m < q; m++)
-    {
-        r[*arrindex][m]=s[m];
-    }
-        (*arrindex)++;  
-    }
-    else
-    {
-        for (j=p; j>=0; j--)
-        {
-            s[q] = j;
-            combs(r,s,k-1,p-j,q+1,arrindex);
-        }
-    }
-    return;  
-}
-
 int main()
 {
-    char *finname = "tests/nonlintest.txt"; /*File name of data*/
-    long const NUM_CHECKS=0L; /*Should be greater than 0*/
-    long const MIN_ODE_ORDER=1L; 
+    char *finname = "tests/Chi_high.ser"; /*File name of data*/
+    long const NUM_CHECKS=10L; /*Should be greater than 0*/
+    long const MIN_ODE_ORDER=24L; 
     long const MIN_DEPTH=1L;
-    long const MAX_DEPTH=10L; //Choosing 1 equals linear
-    long const MAX_COEFFS=100; /*Should be checked for very large sequences*/
+    long const MAX_DEPTH=3L; //Choosing 1 equals linear
+    long const MAX_COEFFS=4300; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
-    //char foutsumname[64]; /*Output summary file name*/
+    char fname[64]; /*Lookup table filename*/
     char fouteqsname[64]; /*Output equations file name*/
     long NUM_COEFFS=0L;
     long MAX_ODE_ORDER=100L; 
@@ -56,10 +32,10 @@ int main()
     long COLUMNS=0L, ROWS=0L;
     long i,j,k,l,m,n,p,numterms=0L,maxnumterms=0L,ordermaxnumterms=0L,first,MAX_DEPTH_POSS,nonzeroterms,ordersused,termsused, MAX_FOUND_POLY_ORDER,firstterm, firstorder,mintermsused,MIN_MAX_FOUND_POLY_ORDER,MIN_MAX_FOUND_DEPTH, bestnulldim,finalorders, MAX_FOUND_DEPTH,MAX_FOUND_ODE_ORDER;
     long nulldim=0L;
-    long **orderexp, *s, arrindex=0L;
+    long **orderexp;
     char input_string[MAX_LINE_LENGTH+1L];
     mpz_t *I, **D, **S, *M, *N, temp, temp2,coeff, *temparray;
-    FILE *fin=NULL, *fouteqs=NULL; //, *foutsum=NULL
+    FILE *fin=NULL, *fouteqs=NULL, *flook=NULL; //, *foutsum=NULL
     char *fgcheck, nulldimflag=0;
     time_t start,end;
     
@@ -282,10 +258,9 @@ int main()
             {
                 break;
             }
-            
-            s = (long *) calloc((ODE_ORDER+1),sizeof(long));
+           
             orderexp = (long **) malloc((numterms+1L)*sizeof(long *));
-            if ((orderexp==NULL) || (s==NULL))
+            if (orderexp==NULL)
             {
                 fprintf(stderr, "No memory left for allocating orderexp matrix. %s",strerror(errno));
                 for (j=0L;j<NUM_COEFFS;j++)
@@ -323,16 +298,29 @@ int main()
                     {
                         free(orderexp[j]);
                     }
-                    free(s);
                     free(I);
                     free(M);
                     free(temparray);
                 exit(EXIT_FAILURE);
                 }
             }
-            arrindex=0L;
             
-            combs(orderexp,s,ODE_ORDER+1L,p,0,&arrindex); 
+            sprintf(fname,"lookuptables/o%ldd%ld.txt",ODE_ORDER,p);
+            flook=fopen(fname,"r");
+            if (flook==NULL)
+            {
+                printf("No lookup table for order %ld depth %ld. %s\n",ODE_ORDER,p,strerror(errno));
+                printf("Skipping ...\n");
+                break;
+            }
+            for (i=0L;i<numterms;i++)
+            {
+                for (j=0L;j<=ODE_ORDER;j++)
+                {
+                    fscanf(flook,"%ld ",&orderexp[i][j]);
+                }
+            }
+            fclose(flook); 
             
             /*
             for (i=0L;i<numterms;i++)
@@ -611,7 +599,6 @@ int main()
                                 free(orderexp[i]);
                             }
                             free(orderexp);
-                            free(s);
                         }
                     }
             else
@@ -627,7 +614,6 @@ int main()
                     free(orderexp[i]);
                 }
                 free(orderexp);
-                free(s);
             }
             //Repeat with greater depth
         } 
@@ -831,7 +817,7 @@ int main()
                                 else
                                 {
                                     fprintf(fouteqs,"*diff(y(x),x)");
-                                    printf("*(Dx)");
+                                    printf("*Dx");
                                 }
                             }
                             else
@@ -844,7 +830,7 @@ int main()
                                 else
                                 {
                                     fprintf(fouteqs,"*diff(y(x),x$%ld)",j);
-                                    printf("*(Dx^%ld)",j);
+                                    printf("*Dx^%ld",j);
                                 }
                             }
                         }

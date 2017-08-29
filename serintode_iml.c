@@ -81,7 +81,7 @@ int main()
         }   
         else
         {
-            if (nonzeroterms==0L)
+            if (nonzeroterms==0L) //Remove initial zeros
             {
                 mpz_set_str(temp,input_string,10);
                 if (mpz_cmp_ui(temp,0)!=0)
