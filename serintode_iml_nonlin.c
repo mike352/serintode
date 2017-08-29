@@ -38,12 +38,12 @@ void combs(long **r, long *s, long k, long p, long q, long *arrindex)
 
 int main()
 {
-    char *finname = "tests/3-colorings.txt"; /*File name of data*/
-    long const NUM_CHECKS=10L; /*Should be greater than 0*/
+    char *finname = "tests/nonlintest.txt"; /*File name of data*/
+    long const NUM_CHECKS=0L; /*Should be greater than 0*/
     long const MIN_ODE_ORDER=1L; 
     long const MIN_DEPTH=1L;
     long const MAX_DEPTH=10L; //Choosing 1 equals linear
-    long const MAX_COEFFS=40; /*Should be checked for very large sequences*/
+    long const MAX_COEFFS=100; /*Should be checked for very large sequences*/
     long const MAX_LINE_LENGTH=100000L; 
     //char foutsumname[64]; /*Output summary file name*/
     char fouteqsname[64]; /*Output equations file name*/
@@ -453,7 +453,6 @@ int main()
             //nulldim = nullspaceMP(ROWS,COLUMNS,M,&N);
             nulldimflag=0L;
             nulldim = kernelMP(ROWS,COLUMNS,M,&N,1L);
-            printf("null dimension = %ld\n",nulldim);
             
             for (i=0L;i<COLUMNS;i++)
             {
@@ -687,6 +686,7 @@ int main()
             fprintf (stdout, "\n"); 
         }
         */
+        printf("null dimension = %ld\n",nulldim);
         printf("****Found a solution!****\n");
         
         sprintf(fouteqsname,"%s_nonlinsol_%ld-checks.txt",finname,NUM_CHECKS);
@@ -828,7 +828,7 @@ int main()
                                 else
                                 {
                                     fprintf(fouteqs,"*diff(y(x),x)");
-                                    printf("*Dx");
+                                    printf("*(Dx)");
                                 }
                             }
                             else
@@ -841,7 +841,7 @@ int main()
                                 else
                                 {
                                     fprintf(fouteqs,"*diff(y(x),x$%ld)",j);
-                                    printf("*Dx^%ld",j);
+                                    printf("*(Dx^%ld)",j);
                                 }
                             }
                         }
